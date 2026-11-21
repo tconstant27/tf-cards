@@ -699,7 +699,7 @@ async function openPack(kind){
   refresh();
 }
 function showPack(kind,pack){
-  ov.innerHTML=`<div class="pk-stage" id="stage"><div class="rays"></div><div class="bigpack ${kind==="classic"?"shop":""}" id="bp"><div class="art"></div><div class="cap"><div class="tear"></div></div><div class="crimp"></div><div class="lbl">${kind==="classic"?"PAQUET BOUTIQUE":"PAQUET GRATUIT"}</div></div></div>
+  ov.innerHTML=`<div class="pk-stage" id="stage"><div class="rays"></div><div class="bigpack ${kind==="classic"?"shop":""}" id="bp"><div class="art"></div><div class="cap"><div class="tear"></div></div><div class="crimp"></div></div></div>
     <div class="hint" id="phint">Glisse ton doigt sur le haut du paquet pour le déchirer</div>`;
   ov.classList.add("on");
   const stage=$("#stage"),bp=$("#bp"),tear=bp.querySelector(".tear");
