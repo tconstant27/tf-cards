@@ -139,7 +139,7 @@ nav.tabs button.on{color:var(--gold)}
 @keyframes float{50%{transform:translateY(-10px) rotate(-1deg)}}
 .bigpack.shake{animation:shake .5s linear}
 @keyframes shake{20%{transform:rotate(-6deg) scale(1.05)}40%{transform:rotate(6deg) scale(1.08)}60%{transform:rotate(-8deg) scale(1.1)}80%{transform:rotate(8deg) scale(1.15)}100%{transform:scale(1.4);opacity:0}}
-.hint{margin-top:22px;color:var(--mut);font-size:14px;animation:blink 1.4s infinite}
+.hint{text-align:center;max-width:320px;margin-top:22px;color:var(--mut);font-size:14px;animation:blink 1.4s infinite}
 @keyframes blink{50%{opacity:.4}}
 .reveal{display:grid;grid-template-columns:repeat(3,minmax(0,140px));gap:14px;justify-content:center;width:100%;max-width:520px}
 @media(min-width:700px){.reveal{grid-template-columns:repeat(5,minmax(0,150px));max-width:820px}}
@@ -175,6 +175,63 @@ nav.tabs button.on{color:var(--gold)}
 .zoom{position:fixed;inset:0;z-index:70;background:#05060bf5;display:none;flex-direction:column;align-items:center;justify-content:safe center;padding:20px;overflow:auto}
 .zoom.on{display:flex}
 .flip.open{cursor:zoom-in}
+/* ---- animations ouverture ---- */
+.pk-stage{position:relative;width:min(240px,64vw);aspect-ratio:200/290;touch-action:none;user-select:none}
+.pk-stage .bigpack{width:100%;height:100%;animation:float 2.4s ease-in-out infinite;overflow:visible}
+.pk-stage .bigpack::before{content:"";position:absolute;inset:0;border-radius:14px;background:linear-gradient(115deg,transparent 35%,#ffffff45 48%,transparent 60%);background-size:250% 100%;animation:foil 2.6s linear infinite;pointer-events:none}
+@keyframes foil{from{background-position:120% 0}to{background-position:-120% 0}}
+.cap{position:absolute;left:-3px;right:-3px;top:-3px;height:17%;border-radius:16px 16px 4px 4px;background:inherit;border:3px solid;border-color:inherit;border-bottom:2px dashed #ffffff80;z-index:2;transform-origin:10% 100%}
+.tear{position:absolute;left:0;bottom:-2px;height:3px;width:calc(var(--p,0)*100%);background:#fff;box-shadow:0 0 10px #fff,0 0 22px #ffe9a0;border-radius:3px}
+.rays{position:absolute;left:50%;top:10%;width:260%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;opacity:0;pointer-events:none;
+  background:repeating-conic-gradient(from 0deg,#fff6 0 6deg,transparent 6deg 18deg);-webkit-mask:radial-gradient(circle,#000 0,transparent 65%);mask:radial-gradient(circle,#000 0,transparent 65%)}
+.torn .cap{animation:capFly .75s cubic-bezier(.3,.6,.4,1) forwards}
+@keyframes capFly{to{transform:translate(-30%,-220%) rotate(-38deg);opacity:0}}
+.torn .rays{opacity:1;animation:spin 6s linear infinite,raysIn .4s ease-out}
+@keyframes spin{to{transform:translate(-50%,-50%) rotate(360deg)}}
+@keyframes raysIn{from{opacity:0}}
+.torn .bigpack{animation:none;box-shadow:0 -30px 80px #fff8,0 0 60px #7d6bff}
+.out .bigpack{animation:packDrop .6s cubic-bezier(.5,0,.8,.4) forwards}
+@keyframes packDrop{to{transform:translateY(130%) scale(.9);opacity:0}}
+.out .rays{opacity:0;transition:opacity .5s}
+
+.fxwrap{position:relative;display:grid;place-items:center;width:min(300px,76vw)}
+.stack{position:relative;width:100%;aspect-ratio:5/7;touch-action:none;animation:stackIn .5s cubic-bezier(.2,1.3,.4,1)}
+@keyframes stackIn{from{transform:translateY(60%) scale(.7);opacity:0}}
+.sc{position:absolute;inset:0;perspective:1000px;transform:translateY(calc(var(--d)*-7px)) scale(calc(1 - var(--d)*.035));transition:transform .35s,opacity .45s,translate .45s,rotate .45s;cursor:pointer}
+.sc.out{translate:-150% -8%;rotate:-24deg;opacity:0;pointer-events:none}
+.sc .in{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .75s cubic-bezier(.3,1.35,.5,1)}
+.sc.open .in{transform:rotateY(180deg)}
+.sc .back,.sc .front{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.sc .front{transform:rotateY(180deg)}
+.sc .back{border-radius:12px;background:radial-gradient(circle at 50% 45%,#2a2f5a,#12152b 70%);border:3px solid #3a3f6a;display:grid;place-items:center;font:700 54px Rajdhani;color:#5a60a8;box-shadow:0 10px 30px #000a}
+.sc .back::after{content:"";position:absolute;inset:10px;border:2px solid #ffffff14;border-radius:8px}
+.sc.glowE .back{box-shadow:0 0 26px var(--e)}.sc.glowM .back{box-shadow:0 0 34px var(--m);animation:pulseM 1.1s infinite}
+.sc.glowL .back{box-shadow:0 0 40px var(--l);animation:pulseL 1s infinite}.sc.glowU .back{animation:pulseU 1.2s infinite}
+@keyframes pulseM{50%{box-shadow:0 0 54px var(--m)}}
+.sc .nb{top:-8px;right:-8px;transform:scale(0);z-index:5}
+.sc.open .nb{animation:pop .45s .55s cubic-bezier(.3,1.8,.5,1) forwards}
+@keyframes pop{to{transform:scale(1)}}
+.burst{position:absolute;inset:-35%;border-radius:50%;pointer-events:none;opacity:0;background:radial-gradient(circle,var(--bc) 0,transparent 62%)}
+.burst.go{animation:burst 1.1s ease-out}
+@keyframes burst{0%{opacity:0;transform:scale(.3)}25%{opacity:.9}100%{opacity:0;transform:scale(1.35)}}
+.rays2{position:absolute;inset:-60%;border-radius:50%;pointer-events:none;opacity:0;background:repeating-conic-gradient(from 0deg,var(--bc) 0 5deg,transparent 5deg 15deg);-webkit-mask:radial-gradient(circle,#000 0,transparent 62%);mask:radial-gradient(circle,#000 0,transparent 62%)}
+.rays2.go{animation:rays2 1.8s ease-out}
+@keyframes rays2{0%{opacity:0;transform:rotate(0)}20%{opacity:.75}100%{opacity:0;transform:rotate(90deg)}}
+.parts{position:absolute;left:50%;top:50%;width:0;height:0;pointer-events:none;z-index:6}
+.parts i{position:absolute;width:var(--s);height:var(--s);border-radius:50%;background:var(--c);box-shadow:0 0 8px var(--c);animation:part var(--t) cubic-bezier(.1,.7,.3,1) forwards}
+@keyframes part{from{transform:translate(0,0) scale(1);opacity:1}to{transform:translate(var(--x),var(--y)) scale(.2);opacity:0}}
+.flash{position:fixed;inset:0;background:#fff;z-index:90;pointer-events:none;animation:flash .7s ease-out forwards}
+@keyframes flash{from{opacity:.95}to{opacity:0}}
+.shakeS{animation:shakeS .45s}
+@keyframes shakeS{20%{transform:translate(-6px,3px)}40%{transform:translate(6px,-3px)}60%{transform:translate(-4px,2px)}80%{transform:translate(3px,-1px)}}
+.counter{margin-top:18px;font:700 16px Rajdhani;letter-spacing:3px;color:var(--mut)}
+.sum{position:relative;opacity:0;transform:translateY(30px) scale(.9);animation:deal .45s forwards;cursor:zoom-in}
+.tilt{position:relative;transform:perspective(900px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transition:transform .12s ease-out;transform-style:preserve-3d}
+.tilt.rest{transition:transform .6s cubic-bezier(.3,1.4,.5,1)}
+.sc .tilt{width:100%;height:100%}
+.shine{position:absolute;inset:0;border-radius:12px;pointer-events:none;z-index:4;opacity:var(--so,0);transition:opacity .3s;
+  background:radial-gradient(circle at var(--mx,50%) var(--my,30%),#ffffffaa 0,#ffffff22 25%,transparent 55%);mix-blend-mode:soft-light}
+.detail{touch-action:none}
 /* detail */
 .detail{width:min(300px,80vw)}
 .dinfo{margin-top:16px;text-align:center;max-width:320px}
@@ -586,36 +643,85 @@ function renderAll(){renderShop();renderLast();renderCol();renderProf()}
 /* ---------- OPENING ---------- */
 const ov=$("#ov");
 const closeOv=()=>{ov.classList.remove("on");ov.innerHTML=""};
+const buzz=ms=>{try{navigator.vibrate&&navigator.vibrate(ms)}catch(e){}};
+function attachTilt(host){
+  const t=host&&host.querySelector(".tilt");if(!t)return;
+  const move=e=>{const r=t.getBoundingClientRect(),x=Math.min(1,Math.max(0,(e.clientX-r.left)/r.width)),y=Math.min(1,Math.max(0,(e.clientY-r.top)/r.height));
+    t.classList.remove("rest");t.style.setProperty("--rx",((.5-y)*26).toFixed(1)+"deg");t.style.setProperty("--ry",((x-.5)*26).toFixed(1)+"deg");
+    t.style.setProperty("--mx",(x*100).toFixed(0)+"%");t.style.setProperty("--my",(y*100).toFixed(0)+"%");t.style.setProperty("--so",1)};
+  const reset=()=>{t.classList.add("rest");t.style.setProperty("--rx","0deg");t.style.setProperty("--ry","0deg");t.style.setProperty("--so",0)};
+  host.addEventListener("pointermove",move);host.addEventListener("pointerdown",move);
+  host.addEventListener("pointerleave",reset);host.addEventListener("pointerup",e=>{if(e.pointerType!=="mouse")reset()});host.addEventListener("pointercancel",reset);
+}
+const tiltCard=html=>`<div class="tilt">${html}<div class="shine"></div></div>`;
+function particles(host,color,n=24,spread=170){
+  const box=document.createElement("div");box.className="parts";
+  for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,d=spread*(.45+Math.random()*.75),el=document.createElement("i");
+    el.style.cssText=`--x:${(Math.cos(a)*d).toFixed(0)}px;--y:${(Math.sin(a)*d).toFixed(0)}px;--s:${(3+Math.random()*6).toFixed(1)}px;--c:${Array.isArray(color)?color[i%color.length]:color};--t:${(.7+Math.random()*.7).toFixed(2)}s`;box.appendChild(el)}
+  host.appendChild(box);setTimeout(()=>box.remove(),1600);
+}
 async function openPack(kind){
   if(busy)return;busy=true;renderShop();
   let pack;
   try{pack=kind==="classic"?await rpc("buy_pack",{kind}):await rpc("open_pack",{kind})}catch(e){busy=false;renderShop();return}
   busy=false;
   pack.sort((a,b)=>rIdx(BY_ID[a.id].rar)-rIdx(BY_ID[b.id].rar));
-  ov.innerHTML=`<div class="bigpack ${kind==="daily"?"daily":kind==="classic"?"shop":""}" id="bp"><span class="tf">TF</span><div class="lbl">${{daily:"PAQUET DU JOUR",classic:"PAQUET BOUTIQUE"}[kind]||"PAQUET GRATUIT"}</div></div><div class="hint">Touche le paquet pour l'ouvrir</div>`;
-  ov.classList.add("on");
-  $("#bp").onclick=e=>{e.currentTarget.classList.add("shake");setTimeout(()=>showCards(pack),480)};
+  showPack(kind,pack);
   refresh();
 }
-function showCards(pack){
-  ov.innerHTML=`<div class="reveal">${pack.map((p,i)=>{const c=BY_ID[p.id];
-    return `<div class="flip glow${c.rar}" style="animation-delay:${i*.08}s" data-i="${i}">
-      <div class="in"><div class="back">TF</div><div class="front">${cardHTML(c,{holo:p.holo})}</div></div>
-      ${p.isNew?`<span class="badge" style="display:none">NOUVEAU</span>`:""}</div>`}).join("")}</div>
-    <div class="ovact"><button class="btn alt" id="revealAll">Tout révéler</button><button class="btn" id="done" style="display:none">Récupérer</button></div>
-    <div class="hint" id="sub">Touche les cartes pour les retourner, puis pour les agrandir</div>`;
-  let opened=0;
-  const flipOne=el=>{if(el.classList.contains("open")){const p=pack[+el.dataset.i];zoomCard(p.id,{holo:p.holo,locked:false});return}el.classList.add("open");const b=el.querySelector(".badge");if(b)setTimeout(()=>b.style.display="",350);
-    const c=BY_ID[pack[+el.dataset.i].id];
-    if("MLU".includes(c.rar))toast(`${{M:"🔥 MYTHIQUE",L:"🌟 LÉGENDAIRE",U:"🌈 UNIQUE"}[c.rar]} : ${c.name} !`);
-    if(++opened===pack.length)finish()};
-  ov.querySelectorAll(".flip").forEach(el=>el.onclick=()=>flipOne(el));
-  $("#revealAll").onclick=()=>ov.querySelectorAll(".flip").forEach((el,i)=>setTimeout(()=>flipOne(el),i*180));
-  function finish(){
-    $("#revealAll").style.display="none";$("#done").style.display="";
-    const d=pack.filter(p=>!p.isNew).length, nw=pack.length-d;
-    const s=$("#sub");s.textContent=`${nw} nouvelle${nw>1?"s":""} carte${nw>1?"s":""}${d?` · ${d} doublon${d>1?"s":""} (à échanger ou recycler)`:""}`;s.style.animation="none";
-  }
+function showPack(kind,pack){
+  ov.innerHTML=`<div class="pk-stage" id="stage"><div class="rays"></div><div class="bigpack ${kind==="classic"?"shop":""}" id="bp"><div class="cap"><div class="tear"></div></div><span class="tf">TF</span><div class="lbl">${kind==="classic"?"PAQUET BOUTIQUE":"PAQUET GRATUIT"}</div></div></div>
+    <div class="hint" id="phint">Glisse ton doigt sur le haut du paquet pour le déchirer</div>`;
+  ov.classList.add("on");
+  const stage=$("#stage"),bp=$("#bp"),tear=bp.querySelector(".tear");
+  let x0=null,moved=0,done=false;
+  const open=()=>{if(done)return;done=true;tear.style.setProperty("--p",1);buzz(25);stage.classList.add("torn");$("#phint").style.visibility="hidden";
+    particles(stage,["#fff","#ffe9a0","#7de3ff"],30,200);
+    setTimeout(()=>stage.classList.add("out"),750);setTimeout(()=>revealStack(pack),1300)};
+  stage.addEventListener("pointerdown",e=>{x0=e.clientX;moved=0;try{stage.setPointerCapture(e.pointerId)}catch(err){}});
+  stage.addEventListener("pointermove",e=>{if(x0===null||done)return;const w=bp.getBoundingClientRect().width,d=Math.abs(e.clientX-x0);moved=Math.max(moved,d);
+    tear.style.transition="none";tear.style.setProperty("--p",Math.min(1,d/(w*.75)));if(d>w*.75)open()});
+  stage.addEventListener("pointerup",()=>{if(done)return;if(moved<10)open();else{tear.style.transition="width .3s";tear.style.setProperty("--p",0)}x0=null});
+}
+function revealStack(pack){
+  const n=pack.length;let idx=0,isOpen=false;
+  ov.innerHTML=`<div class="fxwrap" id="fx"><div class="rays2" id="rays2"></div><div class="burst" id="burst"></div>
+    <div class="stack" id="stack">${pack.map((p,i)=>{const c=BY_ID[p.id];
+      return `<div class="sc glow${c.rar}" data-i="${i}" style="--d:${i};z-index:${n-i}"><div class="tilt"><div class="in"><div class="back">TF</div><div class="front">${cardHTML(c,{holo:p.holo})}<div class="shine"></div></div></div></div>${p.isNew?`<span class="badge nb">NOUVEAU</span>`:""}</div>`}).join("")}</div></div>
+    <div class="counter" id="cnt">1 / ${n}</div>
+    <div class="hint" id="sub">Touche la carte pour la retourner</div>
+    <div class="ovact"><button class="btn alt sm" id="skip">Tout voir</button></div>`;
+  const stack=$("#stack"),fx=$("#fx"),cards=[...stack.querySelectorAll(".sc")];
+  const tiltTop=()=>{const el=cards[idx];if(el)attachTilt(el)};tiltTop();
+  const COL={C:"#9aa3b5",P:"#4cd07d",R:"#3fa7ff",E:"#b46cff",M:"#ff3d71",L:"#ffb020",U:"#ffffff"};
+  const effect=(c,p)=>{
+    const r=c.rar,k=rIdx(r),bu=$("#burst"),ra=$("#rays2");fx.style.setProperty("--bc",COL[r]+"aa");
+    if(k>=rIdx("R")){bu.classList.remove("go");void bu.offsetWidth;bu.classList.add("go")}
+    if(k>=rIdx("E")){ra.classList.remove("go");void ra.offsetWidth;ra.classList.add("go");particles(fx,COL[r],k>=rIdx("M")?40:20,k>=rIdx("M")?230:160)}
+    if(k>=rIdx("M")){buzz(k>=rIdx("L")?[60,40,90]:50);ov.classList.remove("shakeS");void ov.offsetWidth;ov.classList.add("shakeS")}
+    if(k>=rIdx("L")){const f=document.createElement("div");f.className="flash";document.body.appendChild(f);setTimeout(()=>f.remove(),800)}
+    if(r==="U")particles(fx,["#ff3d71","#ffb020","#4cd07d","#3fa7ff","#b46cff"],60,260);
+    if(p.holo)particles(fx,["#ff00c8","#00f0ff","#ffe600"],26,150);
+    if("MLU".includes(r))toast(`${{M:"🔥 MYTHIQUE",L:"🌟 LÉGENDAIRE",U:"🌈 UNIQUE"}[r]} : ${c.name} !`);
+  };
+  stack.addEventListener("click",()=>{
+    if(idx>=n)return;
+    const el=cards[idx],p=pack[idx],c=BY_ID[p.id];
+    if(!isOpen){el.classList.add("open");isOpen=true;setTimeout(()=>effect(c,p),330);$("#sub").textContent=idx<n-1?"Touche encore pour la carte suivante":"Touche pour voir ton paquet";return}
+    el.classList.add("out");isOpen=false;idx++;
+    cards.forEach((x,i)=>{if(i>=idx)x.style.setProperty("--d",i-idx)});
+    if(idx>=n){setTimeout(()=>summary(pack),380);return}
+    tiltTop();
+    $("#cnt").textContent=`${idx+1} / ${n}`;$("#sub").textContent="Touche la carte pour la retourner";
+  });
+  $("#skip").onclick=()=>summary(pack);
+}
+function summary(pack){
+  const d=pack.filter(p=>!p.isNew).length, nw=pack.length-d;
+  ov.innerHTML=`<div class="reveal">${pack.map((p,i)=>`<div class="sum" style="animation-delay:${i*.08}s" data-i="${i}">${cardHTML(BY_ID[p.id],{holo:p.holo})}${p.isNew?`<span class="badge">NOUVEAU</span>`:""}</div>`).join("")}</div>
+    <div class="hint" style="animation:none" id="sub">${nw} nouvelle${nw>1?"s":""} carte${nw>1?"s":""}${d?` · ${d} doublon${d>1?"s":""} (à échanger ou recycler)`:""}</div>
+    <div class="ovact"><button class="btn" id="done">Récupérer</button></div>`;
+  ov.querySelectorAll(".sum").forEach(el=>el.onclick=()=>{const p=pack[+el.dataset.i];zoomCard(p.id,{holo:p.holo,locked:false})});
   $("#done").onclick=()=>{closeOv();renderAll()};
 }
 
@@ -623,7 +729,7 @@ function showCards(pack){
 function showDetail(id){
   const c=BY_ID[id],n=S.col[id]||0,cost=RAR[c.rar].craft,t=SET_BY[c.set];
   const vers=CARDS.filter(x=>x.player===c.player);
-  ov.innerHTML=`<div class="detail">${cardHTML(c,{holo:!!S.holo[id],locked:!n})}</div>
+  ov.innerHTML=`<div class="detail">${tiltCard(cardHTML(c,{holo:!!S.holo[id],locked:!n}))}</div>
     <div class="dinfo"><h2>${esc(c.name)}</h2>
     <p>${t.name} · ${c.role}<br>${RAR[c.rar].name}${n?` · possédée ×${n}`:""}${S.holo[id]?" · ✨ holo":""}</p>
     ${n?`<button class="btn" id="vit">${S.showcase.includes(id)?"★ En vitrine":"Mettre en vitrine"}</button> ${n>1?`<button class="btn alt" id="recy">Recycler 1 doublon (+${RAR[c.rar].dup} 💎)</button>`:""}`
@@ -634,6 +740,7 @@ function showDetail(id){
     </div>`;
   ov.classList.add("on");
   if(c.rar==="U")sb.rpc("unique_owners").then(({data})=>{const o=(data||[]).find(x=>x.card_id===id),el=$("#uowner");if(el)el.textContent=o?`Exemplaire unique, possédé par ${o.pseudo}.`:"Exemplaire unique, encore dans les paquets !"});
+  attachTilt(ov.querySelector(".detail"));
   $("#close").onclick=closeOv;
   ov.querySelectorAll(".vslot").forEach(el=>el.onclick=()=>showDetail(el.dataset.v));
   const vb=$("#vit");if(vb)vb.onclick=()=>chooseSlotFor(id);
@@ -731,8 +838,8 @@ $("#addForm").onsubmit=async e=>{
 function zoomCard(id,{holo=false,locked=null}={}){
   const c=BY_ID[id];if(!c)return;
   const lk=locked===null?!S.col[id]:locked, z=$("#zoom");
-  z.innerHTML=`<div class="detail">${cardHTML(c,{holo,locked:lk})}</div><div class="dinfo"><h2>${esc(c.name)}</h2><p>${SET_BY[c.set].name} · ${c.role}<br>${RAR[c.rar].name}${S.col[id]?` · tu l'as ×${S.col[id]}`:" · tu ne l'as pas"}</p><button class="btn alt" id="zclose">Fermer</button></div>`;
-  z.classList.add("on");
+  z.innerHTML=`<div class="detail">${tiltCard(cardHTML(c,{holo,locked:lk}))}</div><div class="dinfo"><h2>${esc(c.name)}</h2><p>${SET_BY[c.set].name} · ${c.role}<br>${RAR[c.rar].name}${S.col[id]?` · tu l'as ×${S.col[id]}`:" · tu ne l'as pas"}</p><button class="btn alt" id="zclose">Fermer</button></div>`;
+  z.classList.add("on");attachTilt(z.querySelector(".detail"));
   $("#zclose").onclick=()=>z.classList.remove("on");
   z.onclick=e=>{if(e.target===z)z.classList.remove("on")};
 }
