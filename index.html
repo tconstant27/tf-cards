@@ -541,7 +541,7 @@ function renderCol(){
     let lastR="";(SET_BY[filter]?[SET_BY[filter]]:SETS_BY_RAR).forEach(x=>{
       if(!SET_BY[filter]&&x.rar!==lastR){lastR=x.rar;html+=`<div class="rarhead" style="color:var(--${x.rar.toLowerCase()})">${RAR[x.rar].name}s</div>`}
       const cs=CARDS.filter(c=>c.set===x.id), o=cs.filter(c=>S.col[c.id]).length;
-      html+=`<div class="sethead"><div><b>${x.name}</b><span style="color:var(--${x.rar.toLowerCase()})">${RAR[x.rar].name}</span></div><span class="${o===cs.length?"done":""}">${o===cs.length?"✔ ":""}${o}/${cs.length}</span></div><div class="grid">${cs.map(c=>slotHTML(c)).join("")}</div>`;
+      html+=`<div class="sethead"><div><b>${x.name}</b></div><span class="${o===cs.length?"done":""}">${o===cs.length?"✔ ":""}${o}/${cs.length}</span></div><div class="grid">${cs.map(c=>slotHTML(c)).join("")}</div>`;
     });
   }else if(filter==="PLAYERS"){
     const players={};CARDS.forEach(c=>(players[c.player]=players[c.player]||[]).push(c));
