@@ -268,7 +268,7 @@ nav.tabs button{position:relative}
         <div style="flex:1">
           <h3>Paquet boutique</h3>
           <p>5 cartes · même taux qu'un paquet gratuit</p>
-          <button class="btn" id="buyClassic">Acheter · 60 💎</button><span class="timer" id="shopHint"></span>
+          <button class="btn" id="buyClassic">Acheter · 100 💎</button><span class="timer" id="shopHint"></span>
         </div>
       </div>
     </div>
@@ -510,9 +510,9 @@ function renderShop(){
     $("#hourlyTimer").textContent="+1 dans "+fmt(left);
     if(left<=0&&!refilling){refilling=true;refresh().finally(()=>refilling=false)}
   }
-  $("#buyClassic").disabled=S.shards<60||busy;
+  $("#buyClassic").disabled=S.shards<100||busy;
   $("#storeShards").textContent=S.shards;
-  $("#shopHint").textContent=S.shards<60?`encore ${60-S.shards} 💎`:"";
+  $("#shopHint").textContent=S.shards<100?`encore ${100-S.shards} 💎`:"";
 }
 function renderRates(){
   $("#ratesList").innerHTML=R_ORDER.map(r=>`<div class="row"><span style="color:var(--${r.toLowerCase()})">${RAR[r].name}${r==="U"?" (1 seul exemplaire)":""}</span><span>${RAR[r].rate.toLocaleString("fr-FR")} %</span></div>`).join("");
