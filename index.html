@@ -224,6 +224,8 @@ nav.tabs button.on{color:var(--gold)}
 .cback .sw{position:absolute;left:50%;top:46%;width:175%;aspect-ratio:1;translate:-50% -50%;background:url(img/swirl.svg) center/100% no-repeat;animation:swirl 30s linear infinite;opacity:.9}
 .cback .sw::after{content:"";position:absolute;inset:0;background:conic-gradient(from 0deg,transparent,#f7a82330,transparent 25%,#ffffff18,transparent 50%,#f7a82330,transparent 75%);-webkit-mask:radial-gradient(circle,transparent 8%,#000 30%,transparent 62%);mask:radial-gradient(circle,transparent 8%,#000 30%,transparent 62%);animation:swirl 9s linear infinite reverse}
 @keyframes swirl{to{transform:rotate(360deg)}}
+.cback .cbimg{position:absolute;inset:0;background:center/cover no-repeat;animation:cbBreath 4s ease-in-out infinite}
+@keyframes cbBreath{50%{transform:scale(1.04)}}
 .cback .fr{position:absolute;inset:3.5cqw;border:.8cqw solid #f7a82366;border-radius:2.5cqw;box-shadow:inset 0 0 6cqw #000a}
 .cback .fr::before,.cback .fr::after{content:"";position:absolute;width:12cqw;height:12cqw;border:.8cqw solid var(--gold);border-radius:1cqw}
 .cback .fr::before{top:-1.6cqw;left:-1.6cqw;border-right:none;border-bottom:none}
@@ -477,7 +479,7 @@ const TEAM_PHOTOS={};
 const WIDE=new Set(["speciales-les","rosters-valo","rosters-lol","speciales-ratoon","speciales-ga"]);
 const CHAMP_KEY={"Kai'Sa":"Kaisa","Kha'Zix":"Khazix","K'Santé":"KSante"};
 const champUrl=n=>`https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${CHAMP_KEY[n]||n.replace(/[^A-Za-z]/g,"")}_0.jpg`;
-const IMG_V="5";
+const IMG_V="6";
 const roleSvg=(r,cls)=>ROLE_IMG[r]?`<i class="${cls} rimg" style="--m:url(${ROLE_IMG[r]})"></i>`:ROLE_SVG[r]?`<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ROLE_SVG[r]}</svg>`:"";
 function cardHTML(c,{holo=false,locked=false}={}){
   const t=SET_BY[c.set];
@@ -680,7 +682,7 @@ function attachTilt(host){
   host.addEventListener("pointermove",move);host.addEventListener("pointerdown",move);
   host.addEventListener("pointerleave",reset);host.addEventListener("pointerup",e=>{if(e.pointerType!=="mouse")reset()});host.addEventListener("pointercancel",reset);
 }
-const CARD_BACK=()=>`<div class="cback"><div class="sw"></div><div class="fr"></div><img src="img/logo.png?v=${IMG_V}" alt=""><span class="cbt">TF CARDS</span></div>`;
+const CARD_BACK=()=>`<div class="cback"><div class="cbimg" style="background-image:url(img/cardback.jpg?v=${IMG_V})"></div><div class="fr"></div></div>`;
 const tiltCard=html=>`<div class="tilt">${html}<div class="shine"></div></div>`;
 function particles(host,color,n=24,spread=170){
   const box=document.createElement("div");box.className="parts";
