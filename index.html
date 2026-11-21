@@ -730,7 +730,7 @@ async function showFriend(uid,missingOnly=false){
   const list=CARDS.filter(c=>F.col[c.id]&&(!missingOnly||!S.col[c.id])).sort(sortR);
   ov.innerHTML=`<div class="fview">
     <div class="phead"><div class="avatar">${esc(F.pseudo[0].toUpperCase())}</div><div style="flex:1;min-width:0"><h2>${esc(F.pseudo)}</h2><small>Collectionneur depuis le ${new Date(F.created_at).toLocaleDateString("fr-FR")}</small></div><button class="btn alt sm" id="close">✕</button></div>
-    <div class="sect">Vitrine</div><div class="vitrine">${vitrineHTML(show,F.holo,false,true)}</div>
+    <div class="sect">Vitrine</div><div class="vitrine">${vitrineHTML(show,F.holo,false)}</div>
     <div class="ovact" style="justify-content:center"><button class="btn" id="tradeBtn">Proposer un échange</button></div>
     <div class="sect">Statistiques</div><div class="kpis">${statsKPI(F.col,F.holo,F.packs)}</div>
     <div class="sect">Collection</div>
