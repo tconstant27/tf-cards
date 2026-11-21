@@ -159,6 +159,7 @@ nav.tabs button.on{color:var(--gold)}
 
 .card .ed{font:700 4.6cqw Rajdhani;color:var(--gold);text-transform:uppercase;letter-spacing:.5cqw;margin-bottom:1cqw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .card.win{border-color:var(--gold);box-shadow:0 0 0 2px #fff3b0,0 0 22px var(--gold)}
+.rarhead{font:700 24px Rajdhani;letter-spacing:2px;text-transform:uppercase;margin:30px 0 -6px;padding-bottom:4px;border-bottom:2px solid currentColor}
 .sethead{display:flex;justify-content:space-between;align-items:flex-end;margin:22px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line)}
 .sethead b{font:700 18px Rajdhani;display:block}
 .sethead div span{font-size:12px}
@@ -288,7 +289,7 @@ nav.tabs button{position:relative}
     <div class="vitrine" id="vitrine"></div>
     <div class="sect">Statistiques</div>
     <div class="kpis" id="kpis"></div>
-    <div class="panel"><h3 class="disp">Doublons</h3><p id="dupTxt"></p><button class="btn alt" id="recycleAll">Recycler tous les doublons</button></div>
+    <div class="panel"><h3 class="disp">Doublons</h3><p id="dupTxt"></p><button class="btn" id="recycleAll" type="button">Recycler tous les doublons</button></div>
     <div class="panel raritybars"><h3 class="disp">Complétion par rareté</h3><div id="rarBars" style="margin-top:8px"></div></div>
     <div class="panel raritybars"><h3 class="disp">Éditions complétées</h3><div id="setBars" style="margin-top:8px"></div></div>
     <div style="text-align:center;margin:24px 0"><button class="btn alt" id="logout">Se déconnecter</button></div>
@@ -352,6 +353,7 @@ const SETS = [
   {id:"bsk",name:"BSK Summer Clash · Winner",short:"BSK 🏆",game:"SSBU",rar:"E",win:true,t1:"#d4a017",t2:"#2a1a00",p:["MonnaieBison30"]},
 ];
 const SET_BY=Object.fromEntries(SETS.map(s=>[s.id,s]));
+const SETS_BY_RAR=SETS.map((x,i)=>[x,i]).sort((a,b)=>R_ORDER.indexOf(a[0].rar)-R_ORDER.indexOf(b[0].rar)||a[1]-b[1]).map(a=>a[0]);
 function hash(s){let h=2166136261;for(const c of s){h^=c.charCodeAt(0);h=Math.imul(h,16777619)}return h>>>0}
 const pkey=n=>n.toLowerCase().replace(/[^a-z0-9]/g,"");
 const CARDS=[];
@@ -513,11 +515,12 @@ function renderCol(){
   const owned=CARDS.filter(c=>S.col[c.id]).length;
   $("#colTxt").textContent=`${owned} / ${CARDS.length} cartes · ${Object.keys(S.holo).length} holo`;
   $("#colBar").style.width=(owned/CARDS.length*100)+"%";
-  const fl=[["SETS","Par édition"],["PLAYERS","Par joueur"],["OWN","Possédées"],["DUP","Doublons"],...SETS.map(x=>[x.id,x.short])];
+  const fl=[["SETS","Par édition"],["PLAYERS","Par joueur"],["OWN","Possédées"],["DUP","Doublons"],...SETS_BY_RAR.map(x=>[x.id,x.short])];
   $("#filters").innerHTML=fl.map(([k,l])=>`<button data-f="${k}" class="${filter===k?"on":""}">${l}</button>`).join("");
   let html="";
   if(filter==="SETS"||SET_BY[filter]){
-    (SET_BY[filter]?[SET_BY[filter]]:SETS).forEach(x=>{
+    let lastR="";(SET_BY[filter]?[SET_BY[filter]]:SETS_BY_RAR).forEach(x=>{
+      if(!SET_BY[filter]&&x.rar!==lastR){lastR=x.rar;html+=`<div class="rarhead" style="color:var(--${x.rar.toLowerCase()})">${RAR[x.rar].name}s</div>`}
       const cs=CARDS.filter(c=>c.set===x.id), o=cs.filter(c=>S.col[c.id]).length;
       html+=`<div class="sethead"><div><b>${x.name}</b><span style="color:var(--${x.rar.toLowerCase()})">${RAR[x.rar].name}</span></div><span class="${o===cs.length?"done":""}">${o===cs.length?"✔ ":""}${o}/${cs.length}</span></div><div class="grid">${cs.map(c=>slotHTML(c)).join("")}</div>`;
     });
@@ -785,12 +788,20 @@ $("#openDaily").onclick=()=>openPack("daily");
 $("#buyClassic").onclick=()=>openPack("classic");
 $("#filters").onclick=e=>{const f=e.target.dataset.f;if(f){filter=f;renderCol()}};
 document.addEventListener("click",e=>{const s=e.target.closest("main .slot");if(s&&!ov.classList.contains("on"))showDetail(s.dataset.id)});
-$("#recycleAll").onclick=async()=>{try{const g=await rpc("recycle_all");await refresh();toast(`+${g} 💎`)}catch(e){}};
+$("#recycleAll").addEventListener("click",async e=>{
+  const b=e.currentTarget;if(b.disabled)return;
+  b.disabled=true;b.textContent="Recyclage…";
+  try{const g=await rpc("recycle_all");await refresh();toast(`Doublons recyclés : +${g} 💎`)}
+  catch(err){$("#dupTxt").textContent="Erreur : "+((err&&err.message)||err)}
+  finally{b.textContent="Recycler tous les doublons";renderProf()}
+});
 $("#logout").onclick=async()=>{await sb.auth.signOut()};
 document.addEventListener("visibilitychange",()=>{if(!document.hidden&&ME){refresh();loadSocial()}});
 setInterval(renderShop,1000);
 setInterval(()=>{if(ME&&!document.hidden)loadSocial()},30000);
 
+window.addEventListener("error",e=>toast("Erreur : "+e.message));
+window.addEventListener("unhandledrejection",e=>toast("Erreur : "+((e.reason&&e.reason.message)||e.reason)));
 /* ---------- BOOT ---------- */
 renderRates();
 if(!window.supabase){$("#auth").innerHTML=`<div class="authbox"><p class="note err">Impossible de charger le jeu. Vérifie ta connexion puis recharge la page.</p></div>`}
