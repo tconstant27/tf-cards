@@ -172,6 +172,9 @@ nav.tabs button.on{color:var(--gold)}
 .vers{display:flex;gap:8px;overflow-x:auto;padding:4px 2px 8px;scrollbar-width:none}
 .vslot{width:84px;flex:none;cursor:pointer;opacity:.8}
 .vslot.cur{opacity:1;outline:2px solid var(--gold);outline-offset:3px;border-radius:12px}
+.zoom{position:fixed;inset:0;z-index:70;background:#05060bf5;display:none;flex-direction:column;align-items:center;justify-content:safe center;padding:20px;overflow:auto}
+.zoom.on{display:flex}
+.flip.open{cursor:zoom-in}
 /* detail */
 .detail{width:min(300px,80vw)}
 .dinfo{margin-top:16px;text-align:center;max-width:320px}
@@ -301,6 +304,7 @@ nav.tabs button{position:relative}
 </nav>
 </div>
 <div class="ov" id="ov"></div>
+<div class="zoom" id="zoom"></div>
 <div class="toast" id="toast"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.min.js"></script>
 <script>
@@ -598,9 +602,9 @@ function showCards(pack){
       <div class="in"><div class="back">TF</div><div class="front">${cardHTML(c,{holo:p.holo})}</div></div>
       ${p.isNew?`<span class="badge" style="display:none">NOUVEAU</span>`:""}</div>`}).join("")}</div>
     <div class="ovact"><button class="btn alt" id="revealAll">Tout révéler</button><button class="btn" id="done" style="display:none">Récupérer</button></div>
-    <div class="hint" id="sub">Touche les cartes pour les retourner</div>`;
+    <div class="hint" id="sub">Touche les cartes pour les retourner, puis pour les agrandir</div>`;
   let opened=0;
-  const flipOne=el=>{if(el.classList.contains("open"))return;el.classList.add("open");const b=el.querySelector(".badge");if(b)setTimeout(()=>b.style.display="",350);
+  const flipOne=el=>{if(el.classList.contains("open")){const p=pack[+el.dataset.i];zoomCard(p.id,{holo:p.holo,locked:false});return}el.classList.add("open");const b=el.querySelector(".badge");if(b)setTimeout(()=>b.style.display="",350);
     const c=BY_ID[pack[+el.dataset.i].id];
     if("MLU".includes(c.rar))toast(`${{M:"🔥 MYTHIQUE",L:"🌟 LÉGENDAIRE",U:"🌈 UNIQUE"}[c.rar]} : ${c.name} !`);
     if(++opened===pack.length)finish()};
@@ -715,7 +719,7 @@ $("#friendList").addEventListener("click",e=>{
   else if(ds.acc){d.disabled=true;act(async()=>{const r=await rpc("trade_respond",{p_trade:+ds.acc,p_accept:true});toast(r==="accepted"?"Échange réalisé !":"Échange impossible : les cartes ne sont plus disponibles")})}
   else if(ds.dec)act(()=>rpc("trade_respond",{p_trade:+ds.dec,p_accept:false}));
   else if(ds.can)act(()=>rpc("trade_cancel",{p_trade:+ds.can}));
-  else if(d.classList.contains("tc"))showPreview(d.dataset.id);
+  else if(d.classList.contains("tc"))zoomCard(d.dataset.id);
 });
 $("#addForm").onsubmit=async e=>{
   e.preventDefault();const i=$("#addInput"),v=i.value.trim();if(!v)return;
@@ -723,6 +727,14 @@ $("#addForm").onsubmit=async e=>{
     toast({sent:"Demande envoyée à "+v,accepted:"Vous êtes maintenant amis !",already:"Déjà ami ou demande en cours"}[r]||r);
     i.value="";loadSocial()}catch(e){}
 };
+function zoomCard(id,{holo=false,locked=null}={}){
+  const c=BY_ID[id];if(!c)return;
+  const lk=locked===null?!S.col[id]:locked, z=$("#zoom");
+  z.innerHTML=`<div class="detail">${cardHTML(c,{holo,locked:lk})}</div><div class="dinfo"><h2>${esc(c.name)}</h2><p>${SET_BY[c.set].name} · ${c.role}<br>${RAR[c.rar].name}${S.col[id]?` · tu l'as ×${S.col[id]}`:" · tu ne l'as pas"}</p><button class="btn alt" id="zclose">Fermer</button></div>`;
+  z.classList.add("on");
+  $("#zclose").onclick=()=>z.classList.remove("on");
+  z.onclick=e=>{if(e.target===z)z.classList.remove("on")};
+}
 function showPreview(id){
   const c=BY_ID[id];
   const own=!!S.col[id];
@@ -755,7 +767,8 @@ async function showFriend(uid,missingOnly=false){
   $("#close").onclick=closeOv;
   $("#fAll").onclick=()=>showFriend(uid,false);$("#fMiss").onclick=()=>showFriend(uid,true);
   $("#tradeBtn").onclick=()=>tradeBuilder(F);
-  ov.querySelectorAll(".fc").forEach(el=>el.onclick=()=>showPreview(el.dataset.id));
+  ov.querySelectorAll(".fc").forEach(el=>el.onclick=()=>zoomCard(el.dataset.id,{holo:!!F.holo[el.dataset.id]}));
+  ov.querySelectorAll(".vitrine .vslot3").forEach(el=>{const id=show[+el.dataset.s];if(id)el.onclick=()=>zoomCard(id,{holo:!!F.holo[id],locked:false})});
   let arm=0;$("#unfriend").onclick=e=>{if(Date.now()-arm<3000){closeOv();act(()=>rpc("friend_remove",{p_other:uid}))}else{arm=Date.now();e.target.textContent="Touche encore pour confirmer"}};
 }
 
