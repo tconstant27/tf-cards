@@ -160,6 +160,10 @@ nav.tabs button.on{color:var(--gold)}
 .card .ed{font:700 4.6cqw Rajdhani;color:var(--gold);text-transform:uppercase;letter-spacing:.5cqw;margin-bottom:1cqw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .card.win{border-color:var(--gold);box-shadow:0 0 0 2px #fff3b0,0 0 22px var(--gold)}
 .rarhead{font:700 24px Rajdhani;letter-spacing:2px;text-transform:uppercase;margin:30px 0 -6px;padding-bottom:4px;border-bottom:2px solid currentColor}
+.ach{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:8px}
+.ach.done{opacity:.55}.ach.ready{border-color:var(--gold);box-shadow:0 0 14px #f2c14e33}
+.ach .ai{flex:1;min-width:0}.ach b{display:block;font-size:15px}.ach small{color:var(--mut);font-size:12px}
+.ach .bar{height:6px;margin-top:6px}.ach .rw{font:700 15px Rajdhani;color:#7de3ff;white-space:nowrap}
 .sethead{display:flex;justify-content:space-between;align-items:flex-end;margin:22px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line)}
 .sethead b{font:700 18px Rajdhani;display:block}
 .sethead div span{font-size:12px}
@@ -221,7 +225,7 @@ nav.tabs button.on{color:var(--gold)}
 .badge.selb{background:var(--gold);color:#1a1200;left:-6px;right:auto}
 .tradebar{position:fixed;left:0;right:0;bottom:0;background:#0e111bf2;border-top:1px solid var(--line);padding:12px 16px calc(12px + env(safe-area-inset-bottom));display:flex;justify-content:space-between;align-items:center;gap:10px;z-index:60;font-size:14px}
 nav.tabs button{position:relative}
-#navBadge{position:absolute;top:4px;left:calc(50% + 6px);background:var(--m);color:#fff;font:700 11px Inter;border-radius:99px;padding:1px 6px}
+#navBadge,.navb{position:absolute;top:4px;left:calc(50% + 6px);background:var(--m);color:#fff;font:700 11px Inter;border-radius:99px;padding:1px 6px}
 </style>
 </head>
 <body>
@@ -289,6 +293,8 @@ nav.tabs button{position:relative}
     <div class="vitrine" id="vitrine"></div>
     <div class="sect">Statistiques</div>
     <div class="kpis" id="kpis"></div>
+    <div class="sect">Succès <span id="achCount" style="letter-spacing:0"></span></div>
+    <div id="achList"></div>
     <div class="panel"><h3 class="disp">Doublons</h3><p id="dupTxt"></p><button class="btn" id="recycleAll" type="button">Recycler tous les doublons</button></div>
     <div class="panel raritybars"><h3 class="disp">Complétion par rareté</h3><div id="rarBars" style="margin-top:8px"></div></div>
     <div class="panel raritybars"><h3 class="disp">Éditions complétées</h3><div id="setBars" style="margin-top:8px"></div></div>
@@ -300,7 +306,7 @@ nav.tabs button{position:relative}
   <button data-v="col"><span class="ic">📚</span>Collection</button>
   <button data-v="store"><span class="ic">🛒</span>Boutique</button>
   <button data-v="friends"><span class="ic">🤝</span>Amis<span id="navBadge" style="display:none"></span></button>
-  <button data-v="prof"><span class="ic">👤</span>Profil</button>
+  <button data-v="prof"><span class="ic">👤</span>Profil<span id="profBadge" class="navb" style="display:none"></span></button>
 </nav>
 </div>
 <div class="ov" id="ov"></div>
@@ -468,6 +474,7 @@ async function onSession(session){
 
 /* ---------- STATE ---------- */
 async function refresh(){
+  loadAch();
   const m=await rpc("get_me");
   S.pseudo=m.pseudo;S.created_at=m.created_at;S.shards=m.shards;S.stock=m.stock;S.tick=m.tick;S.daily_ok=m.daily_ok;
   S.packs=m.packs;S.cards_total=m.cards_total;S.showcase=(m.showcase||[]).concat([null,null,null]).slice(0,3);S.last=m.last_pack||[];
@@ -477,6 +484,24 @@ async function refresh(){
   renderAll();
 }
 const now=()=>Date.now()+clockOff;
+
+/* ---------- SUCCÈS ---------- */
+let ACH=[];
+async function loadAch(){const {data,error}=await sb.rpc("my_achievements");if(!error){ACH=data||[];renderAch()}}
+function renderAch(){
+  const ready=ACH.filter(a=>!a.claimed&&a.progress>=a.target), done=ACH.filter(a=>a.claimed).length;
+  const b=$("#profBadge");b.textContent=ready.length;b.style.display=ready.length?"":"none";
+  $("#achCount").textContent=`${done}/${ACH.length}`;
+  const order=a=>a.claimed?2:(a.progress>=a.target?0:1);
+  $("#achList").innerHTML=ACH.slice().sort((x,y)=>order(x)-order(y)).map(a=>{
+    const ok=a.progress>=a.target;
+    return `<div class="ach${a.claimed?" done":ok?" ready":""}"><div class="ai"><b>${esc(a.name)}</b><small>${esc(a.descr)} · ${a.progress}/${a.target}</small><div class="bar"><i style="width:${a.progress/a.target*100}%"></i></div></div>
+      ${a.claimed?`<span class="rw">✔</span>`:ok?`<button class="btn sm" data-ach="${a.id}">+${a.reward} 💎</button>`:`<span class="rw" style="opacity:.6">${a.reward} 💎</span>`}</div>`}).join("");
+}
+$("#achList").addEventListener("click",async e=>{
+  const b=e.target.closest("[data-ach]");if(!b||b.disabled)return;b.disabled=true;
+  try{const g=await rpc("claim_achievement",{p_id:b.dataset.ach});toast(`Succès récupéré : +${g} 💎`);await refresh()}catch(err){b.disabled=false}
+});
 
 /* ---------- SHOP ---------- */
 let refilling=false;
