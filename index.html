@@ -334,7 +334,8 @@ const ROLE_SVG={
   "Remplaçant":'<path d="M4 8h14"/><path d="M14.5 4.5L18 8l-3.5 3.5"/><path d="M20 16H6"/><path d="M9.5 12.5L6 16l3.5 3.5"/>'
 };
 // photo par carte (id de carte → fichier)
-const PHOTOS={"lyon-nono":"nono","lyon-batou":"batou","lyon-obli":"obli","lyon-nika":"nika","lyon-clawser":"clawser"};
+const PHOTOS={"lyon-nono":"nono","lyon-batou":"batou","lyon-obli":"obli","lyon-nika":"nika","lyon-clawser":"clawser",
+  "les-hardwel":"v-hardwel","les-sofydep":"v-sofydep","les-onyxz":"v-onyxz","les-robin":"v-robin","les-haon":"v-haon"};
 const roleSvg=(r,cls)=>ROLE_SVG[r]?`<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ROLE_SVG[r]}</svg>`:"";
 function cardHTML(c,{holo=false,locked=false}={}){
   const t=SET_BY[c.set];
