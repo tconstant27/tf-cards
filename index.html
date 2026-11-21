@@ -538,8 +538,8 @@ function renderCol(){
 }
 
 /* ---------- PROFILE ---------- */
-function vitrineHTML(show,holo,clickable){
-  return show.map((id,i)=>`<div class="vslot3" data-s="${i}">${id&&BY_ID[id]?cardHTML(BY_ID[id],{holo:!!holo[id]}):`<div class="empty"><div>${clickable?"＋":"—"}<small>Carte ${i+1}</small></div></div>`}</div>`).join("");
+function vitrineHTML(show,holo,clickable,hideUnowned){
+  return show.map((id,i)=>`<div class="vslot3" data-s="${i}">${id&&BY_ID[id]?cardHTML(BY_ID[id],{holo:!!holo[id],locked:!!hideUnowned&&!S.col[id]}):`<div class="empty"><div>${clickable?"＋":"—"}<small>Carte ${i+1}</small></div></div>`}</div>`).join("");
 }
 function statsKPI(col,holo,packs){
   const owned=CARDS.filter(c=>col[c.id]).length;
@@ -661,7 +661,7 @@ async function loadSocial(){
 function tradeCards(items,owner){
   const its=items.filter(i=>i.owner===owner&&BY_ID[i.card_id]);
   if(!its.length)return `<p class="note">rien</p>`;
-  return `<div class="tcards">${its.map(i=>`<div class="tc" data-id="${i.card_id}">${cardHTML(BY_ID[i.card_id])}${i.qty>1?`<span class="badge cnt">×${i.qty}</span>`:""}</div>`).join("")}</div>`;
+  return `<div class="tcards">${its.map(i=>`<div class="tc" data-id="${i.card_id}">${cardHTML(BY_ID[i.card_id],{locked:!S.col[i.card_id]&&owner!==ME})}${i.qty>1?`<span class="badge cnt">×${i.qty}</span>`:""}</div>`).join("")}</div>`;
 }
 function tradeHTML(t){
   const incoming=t.to_user===ME, other=incoming?t.from_user:t.to_user, name=esc(SOCIAL.names[other]||"?");
@@ -712,7 +712,8 @@ $("#addForm").onsubmit=async e=>{
 };
 function showPreview(id){
   const c=BY_ID[id];
-  ov.innerHTML=`<div class="detail">${cardHTML(c)}</div><div class="dinfo"><h2>${esc(c.name)}</h2><p>${SET_BY[c.set].name} · ${c.role}<br>${RAR[c.rar].name}${S.col[id]?` · tu l'as ×${S.col[id]}`:" · tu ne l'as pas"}</p><button class="btn alt" id="close">Fermer</button></div>`;
+  const own=!!S.col[id];
+  ov.innerHTML=`<div class="detail">${cardHTML(c,{locked:!own})}</div><div class="dinfo"><h2>${own?esc(c.name):"Carte non obtenue"}</h2><p>${SET_BY[c.set].name}${own?" · "+c.role:""}<br>${RAR[c.rar].name}${S.col[id]?` · tu l'as ×${S.col[id]}`:" · tu ne l'as pas"}</p><button class="btn alt" id="close">Fermer</button></div>`;
   ov.classList.add("on");$("#close").onclick=closeOv;
 }
 
@@ -729,12 +730,12 @@ async function showFriend(uid,missingOnly=false){
   const list=CARDS.filter(c=>F.col[c.id]&&(!missingOnly||!S.col[c.id])).sort(sortR);
   ov.innerHTML=`<div class="fview">
     <div class="phead"><div class="avatar">${esc(F.pseudo[0].toUpperCase())}</div><div style="flex:1;min-width:0"><h2>${esc(F.pseudo)}</h2><small>Collectionneur depuis le ${new Date(F.created_at).toLocaleDateString("fr-FR")}</small></div><button class="btn alt sm" id="close">✕</button></div>
-    <div class="sect">Vitrine</div><div class="vitrine">${vitrineHTML(show,F.holo,false)}</div>
+    <div class="sect">Vitrine</div><div class="vitrine">${vitrineHTML(show,F.holo,false,true)}</div>
     <div class="ovact" style="justify-content:center"><button class="btn" id="tradeBtn">Proposer un échange</button></div>
     <div class="sect">Statistiques</div><div class="kpis">${statsKPI(F.col,F.holo,F.packs)}</div>
     <div class="sect">Collection</div>
     <div class="filters"><button class="${missingOnly?"":"on"}" id="fAll">Toutes ses cartes</button><button class="${missingOnly?"on":""}" id="fMiss">Celles qui me manquent</button></div>
-    <div class="grid">${list.map(c=>`<div class="slot fc" data-id="${c.id}">${cardHTML(c,{holo:!!F.holo[c.id]})}${F.col[c.id]>1?`<span class="badge cnt">×${F.col[c.id]}</span>`:""}${!S.col[c.id]?`<span class="badge">MANQUE</span>`:""}</div>`).join("")||`<p class="note">Rien à afficher.</p>`}</div>
+    <div class="grid">${list.map(c=>`<div class="slot fc" data-id="${c.id}">${cardHTML(c,{holo:!!F.holo[c.id],locked:!S.col[c.id]})}${F.col[c.id]>1?`<span class="badge cnt">×${F.col[c.id]}</span>`:""}</div>`).join("")||`<p class="note">Rien à afficher.</p>`}</div>
     <div class="ovact" style="justify-content:center;margin:24px 0"><button class="btn alt sm" id="unfriend">Retirer de mes amis</button></div>
   </div>`;
   ov.classList.add("on");ov.scrollTop=0;
@@ -758,7 +759,7 @@ function tradeBuilder(F){
       <div class="phead"><div style="flex:1"><h2>Échange avec ${esc(F.pseudo)}</h2><small>Touche une carte pour l'ajouter (retouche pour en ajouter une autre, jusqu'à repasser à 0)</small></div><button class="btn alt sm" id="close">✕</button></div>
       <div class="filters" style="margin-top:12px"><button class="${mine?"on":""}" id="sGive">Je donne (${ng})</button><button class="${!mine?"on":""}" id="sWant">Je reçois (${nw})</button></div>
       <div class="filters"><button data-x="ALL" class="${flt==="ALL"?"on":""}">Toutes</button><button data-x="DUP" class="${flt==="DUP"?"on":""}">Doublons</button><button data-x="MISS" class="${flt==="MISS"?"on":""}">${mine?`Qui manquent à ${esc(F.pseudo)}`:"Qui me manquent"}</button></div>
-      <div class="grid">${list.map(c=>`<div class="slot tb${sel[c.id]?" sel":""}" data-id="${c.id}">${cardHTML(c)}<span class="badge cnt">${sel[c.id]?`${sel[c.id]}/`:"×"}${col[c.id]}</span>${sel[c.id]?`<span class="badge selb">✓</span>`:""}</div>`).join("")||`<p class="note">Aucune carte ici.</p>`}</div>
+      <div class="grid">${list.map(c=>`<div class="slot tb${sel[c.id]?" sel":""}" data-id="${c.id}">${cardHTML(c,{locked:!mine&&!S.col[c.id]})}<span class="badge cnt">${sel[c.id]?`${sel[c.id]}/`:"×"}${col[c.id]}</span>${sel[c.id]?`<span class="badge selb">✓</span>`:""}</div>`).join("")||`<p class="note">Aucune carte ici.</p>`}</div>
       <div class="tradebar"><span>Tu donnes <b>${ng}</b> · tu reçois <b>${nw}</b></span><button class="btn" id="send" ${ng+nw?"":"disabled"}>Envoyer</button></div>
     </div>`;
     $("#close").onclick=closeOv;
