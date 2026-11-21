@@ -616,7 +616,7 @@ function showDetail(id){
   ov.classList.add("on");
   if(c.rar==="U")sb.rpc("unique_owners").then(({data})=>{const o=(data||[]).find(x=>x.card_id===id),el=$("#uowner");if(el)el.textContent=o?`Exemplaire unique, possédé par ${o.pseudo}.`:"Exemplaire unique, encore dans les paquets !"});
   $("#close").onclick=closeOv;
-  ov.querySelectorAll(".vslot")(el=>el.onclick=()=>showDetail(el.dataset.v));
+  ov.querySelectorAll(".vslot").forEach(el=>el.onclick=()=>showDetail(el.dataset.v));
   const vb=$("#vit");if(vb)vb.onclick=()=>chooseSlotFor(id);
   const rb=$("#recy");if(rb)rb.onclick=async()=>{rb.disabled=true;try{await rpc("recycle",{p_card:id,p_n:1});await refresh();showDetail(id)}catch(e){rb.disabled=false}};
   const cb=$("#craft");if(cb)cb.onclick=async()=>{cb.disabled=true;try{await rpc("craft",{p_card:id});await refresh();toast(`${c.name} (${t.short}) ajouté à ta collection !`);showDetail(id)}catch(e){cb.disabled=false}};
