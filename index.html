@@ -251,17 +251,6 @@ nav.tabs button{position:relative}
         </div>
       </div>
     </div>
-    <div class="sect">Boutique</div>
-    <div class="packs">
-      <div class="packcard">
-        <div class="minipack shop"><span class="tf">TF</span></div>
-        <div style="flex:1">
-          <h3>Paquet boutique</h3>
-          <p>5 cartes · à acheter avec tes éclats 💎 (obtenus en recyclant tes doublons)</p>
-          <button class="btn" id="buyClassic">Acheter · 60 💎</button><span class="timer" id="shopHint"></span>
-        </div>
-      </div>
-    </div>
     <div class="rates">
       <h3>Taux par carte</h3>
       <div id="ratesList"></div>
@@ -273,6 +262,20 @@ nav.tabs button{position:relative}
     <div class="colhead"><div class="prog"><div class="disp" style="font-size:20px" id="colTxt"></div><div class="bar"><i id="colBar"></i></div></div></div>
     <div class="filters" id="filters"></div>
     <div id="grid"></div>
+  </section>
+  <section class="view" id="v-store">
+    <div class="panel" style="margin-top:0;display:flex;align-items:center;justify-content:space-between"><div><h3 class="disp">Tes éclats</h3><p style="margin:2px 0 0">Recycle tes doublons dans ton profil pour en gagner.</p></div><div class="disp" style="font-size:28px;color:#7de3ff;white-space:nowrap;margin-left:12px">💎 <span id="storeShards">0</span></div></div>
+    <div class="sect">Paquets</div>
+    <div class="packs">
+      <div class="packcard">
+        <div class="minipack shop"><span class="tf">TF</span></div>
+        <div style="flex:1">
+          <h3>Paquet boutique</h3>
+          <p>5 cartes · même taux qu'un paquet de l'heure</p>
+          <button class="btn" id="buyClassic">Acheter · 60 💎</button><span class="timer" id="shopHint"></span>
+        </div>
+      </div>
+    </div>
   </section>
   <section class="view" id="v-friends">
     <form id="addForm" class="panel" style="margin-top:0"><h3 class="disp">Ajouter un ami</h3><p>Entre le pseudo exact de ton pote.</p>
@@ -294,6 +297,7 @@ nav.tabs button{position:relative}
 <nav class="tabs">
   <button class="on" data-v="shop"><span class="ic">🎁</span>Paquets</button>
   <button data-v="col"><span class="ic">📚</span>Collection</button>
+  <button data-v="store"><span class="ic">🛒</span>Boutique</button>
   <button data-v="friends"><span class="ic">🤝</span>Amis<span id="navBadge" style="display:none"></span></button>
   <button data-v="prof"><span class="ic">👤</span>Profil</button>
 </nav>
@@ -487,6 +491,7 @@ function renderShop(){
   }
   $("#openDaily").disabled=!S.daily_ok||busy;
   $("#buyClassic").disabled=S.shards<60||busy;
+  $("#storeShards").textContent=S.shards;
   $("#shopHint").textContent=S.shards<60?`encore ${60-S.shards} 💎`:"";
   const mid=new Date();mid.setHours(24,0,0,0);
   const dl=mid-Date.now();
