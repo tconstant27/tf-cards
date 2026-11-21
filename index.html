@@ -636,7 +636,7 @@ function showDetail(id){
     <div class="dinfo"><h2>${esc(c.name)}</h2>
     <p>${t.name} · ${c.role}<br>${RAR[c.rar].name}${n?` · possédée ×${n}`:""}${S.holo[id]?" · ✨ holo":""}</p>
     ${n?`<button class="btn" id="vit">${S.showcase.includes(id)?"★ En vitrine":"Mettre en vitrine"}</button> ${n>1?`<button class="btn alt" id="recy">Recycler 1 doublon (+${RAR[c.rar].dup} 💎)</button>`:""}`
-      :c.rar==="U"?`<p class="note" id="uowner">Exemplaire unique : une seule personne peut l'avoir.</p>`:`<button class="btn" id="craft" ${S.shards<cost?"disabled":""}>Fabriquer pour ${cost} 💎</button>`}
+      :c.rar==="U"?`<p class="note" id="uowner">Exemplaire unique : une seule personne peut l'avoir.</p>`:`<p class="note">Pas encore obtenue : ouvre des paquets ou échange-la avec un ami.</p>`}
     <button class="btn alt" id="close">Fermer</button>
     ${vers.length>1?`<div class="sect">${esc(c.name)} : ${vers.filter(v=>S.col[v.id]).length}/${vers.length} versions</div>
       <div class="vers">${vers.map(v=>`<div class="vslot${v.id===id?" cur":""}" data-v="${v.id}">${cardHTML(v,{holo:!!S.holo[v.id],locked:!S.col[v.id]})}</div>`).join("")}</div>`:""}
@@ -647,7 +647,6 @@ function showDetail(id){
   ov.querySelectorAll(".vslot").forEach(el=>el.onclick=()=>showDetail(el.dataset.v));
   const vb=$("#vit");if(vb)vb.onclick=()=>chooseSlotFor(id);
   const rb=$("#recy");if(rb)rb.onclick=async()=>{rb.disabled=true;try{await rpc("recycle",{p_card:id,p_n:1});await refresh();showDetail(id)}catch(e){rb.disabled=false}};
-  const cb=$("#craft");if(cb)cb.onclick=async()=>{cb.disabled=true;try{await rpc("craft",{p_card:id});await refresh();toast(`${c.name} (${t.short}) ajouté à ta collection !`);showDetail(id)}catch(e){cb.disabled=false}};
 }
 async function setShow(slot,id){
   try{await rpc("set_showcase",{p_slot:slot+1,p_card:id});closeOv();await refresh();toast("Vitrine mise à jour")}catch(e){}
