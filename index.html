@@ -244,7 +244,7 @@ nav.tabs button{position:relative}
         <div class="minipack"><span class="tf">TF</span></div>
         <div style="flex:1">
           <h3>Paquet gratuit</h3>
-          <p>5 cartes · 1 paquet offert toutes les 5 h (stock max 3)</p>
+          <p>5 cartes · 1 paquet offert toutes les 3 h (stock max 3)</p>
           <div class="stock" id="stockBar"></div>
           <button class="btn" id="openHourly">Ouvrir</button><span class="timer" id="hourlyTimer"></span>
         </div>
@@ -511,7 +511,7 @@ function renderShop(){
   $("#openHourly").disabled=S.stock<1||busy;
   if(S.stock>=MAXSTOCK)$("#hourlyTimer").textContent="Stock plein";
   else{
-    const left=Date.parse(S.tick)+5*H-now();
+    const left=Date.parse(S.tick)+3*H-now();
     $("#hourlyTimer").textContent="+1 dans "+fmt(left);
     if(left<=0&&!refilling){refilling=true;refresh().finally(()=>refilling=false)}
   }
