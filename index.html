@@ -246,14 +246,6 @@ nav.tabs button{position:relative}
           <button class="btn" id="openHourly">Ouvrir</button><span class="timer" id="hourlyTimer"></span>
         </div>
       </div>
-      <div class="packcard">
-        <div class="minipack daily"><span class="tf">TF</span></div>
-        <div style="flex:1">
-          <h3>Paquet du jour</h3>
-          <p>7 cartes · au moins une Épique garantie</p>
-          <button class="btn" id="openDaily">Ouvrir</button><span class="timer" id="dailyTimer"></span>
-        </div>
-      </div>
     </div>
     <div class="rates">
       <h3>Taux par carte</h3>
@@ -518,14 +510,9 @@ function renderShop(){
     $("#hourlyTimer").textContent="+1 dans "+fmt(left);
     if(left<=0&&!refilling){refilling=true;refresh().finally(()=>refilling=false)}
   }
-  $("#openDaily").disabled=!S.daily_ok||busy;
   $("#buyClassic").disabled=S.shards<60||busy;
   $("#storeShards").textContent=S.shards;
   $("#shopHint").textContent=S.shards<60?`encore ${60-S.shards} 💎`:"";
-  const mid=new Date();mid.setHours(24,0,0,0);
-  const dl=mid-Date.now();
-  $("#dailyTimer").textContent=S.daily_ok?"Disponible !":"Revient dans "+fmt(dl);
-  if(!S.daily_ok&&dl<1000&&!refilling){refilling=true;setTimeout(()=>refresh().finally(()=>refilling=false),2000)}
 }
 function renderRates(){
   $("#ratesList").innerHTML=R_ORDER.map(r=>`<div class="row"><span style="color:var(--${r.toLowerCase()})">${RAR[r].name}${r==="U"?" (1 seul exemplaire)":""}</span><span>${RAR[r].rate.toLocaleString("fr-FR")} %</span></div>`).join("");
@@ -811,7 +798,6 @@ function switchTab(v){
 }
 document.querySelectorAll("nav.tabs button").forEach(b=>b.onclick=()=>switchTab(b.dataset.v));
 $("#openHourly").onclick=()=>openPack("hourly");
-$("#openDaily").onclick=()=>openPack("daily");
 $("#buyClassic").onclick=()=>openPack("classic");
 $("#filters").onclick=e=>{const f=e.target.dataset.f;if(f){filter=f;renderCol()}};
 document.addEventListener("click",e=>{const s=e.target.closest("main .slot");if(s&&!ov.classList.contains("on"))showDetail(s.dataset.id)});
