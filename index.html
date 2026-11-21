@@ -241,8 +241,8 @@ nav.tabs button{position:relative}
       <div class="packcard">
         <div class="minipack"><span class="tf">TF</span></div>
         <div style="flex:1">
-          <h3>Paquet de l'heure</h3>
-          <p>5 cartes · 1 paquet offert chaque heure (stock max 3)</p>
+          <h3>Paquet gratuit</h3>
+          <p>5 cartes · 1 paquet offert toutes les 5 h (stock max 3)</p>
           <div class="stock" id="stockBar"></div>
           <button class="btn" id="openHourly">Ouvrir</button><span class="timer" id="hourlyTimer"></span>
         </div>
@@ -276,7 +276,7 @@ nav.tabs button{position:relative}
         <div class="minipack shop"><span class="tf">TF</span></div>
         <div style="flex:1">
           <h3>Paquet boutique</h3>
-          <p>5 cartes · même taux qu'un paquet de l'heure</p>
+          <p>5 cartes · même taux qu'un paquet gratuit</p>
           <button class="btn" id="buyClassic">Acheter · 60 💎</button><span class="timer" id="shopHint"></span>
         </div>
       </div>
@@ -322,12 +322,12 @@ const GAMES = {
   LEG:{icon:"🔥"},
 };
 const RAR = {
-  C:{name:"Commune",rate:45,dup:5,craft:40},
-  P:{name:"Peu commune",rate:25,dup:10,craft:70},
-  R:{name:"Rare",rate:15,dup:15,craft:100},
-  E:{name:"Épique",rate:9,dup:40,craft:250},
-  M:{name:"Mythique",rate:4,dup:100,craft:800},
-  L:{name:"Légendaire",rate:1.8,dup:300,craft:2000},
+  C:{name:"Commune",rate:45,dup:1,craft:40},
+  P:{name:"Peu commune",rate:25,dup:2,craft:70},
+  R:{name:"Rare",rate:15,dup:3,craft:100},
+  E:{name:"Épique",rate:9,dup:5,craft:250},
+  M:{name:"Mythique",rate:4,dup:10,craft:800},
+  L:{name:"Légendaire",rate:1.8,dup:20,craft:2000},
   U:{name:"Unique",rate:0.2,dup:0,craft:null},
 };
 const R_ORDER=["C","P","R","E","M","L","U"];
@@ -404,7 +404,7 @@ function cardHTML(c,{holo=false,locked=false}={}){
   return `<div class="card ${c.rar}${t.raw?" raw":""}${holo?" holo":""}${locked?" locked":""}${t.win?" win":""}" style="--t1:${t.t1};--t2:${t.t2}">
     <div class="hdr"><div class="rl">${RAR[c.rar].name}</div><div class="team">${t.short}</div></div>
     ${TEAM_PHOTOS[c.id]?`<div class="ph tph">${TEAM_PHOTOS[c.id].map(f=>`<img src="img/${f}.jpg" alt="" loading="lazy">`).join("")}</div>`:WIDE.has(c.id)?`<div class="ph phw"><img class="bgb" src="img/${PHOTOS[c.id]}.jpg" alt="" loading="lazy"><img class="fg" src="img/${PHOTOS[c.id]}.jpg" alt="" loading="lazy"></div>`:PHOTOS[c.id]?`<img class="ph${PHOTOS[c.id].endsWith(".png")?" cut":""}" src="img/${PHOTOS[c.id].includes(".")?PHOTOS[c.id]:PHOTOS[c.id]+".jpg"}" alt="" loading="lazy">`:`${c.champ?`<img class="ph champbg" src="${champUrl(c.champ)}" alt="" loading="lazy" onerror="this.remove()">`:roleSvg(c.role,"rbg")}<div class="art${c.champ?" noart":""}"><em>${locked?"🔒":(ROLE_SVG[c.role]&&!SET_BY[c.set].win?roleSvg(c.role,"ric"):c.icon)}</em></div>`}
-    <div class="foot"><div class="ed">${t.name}</div><div class="nm" style="${c.name.length>9?`font-size:${Math.max(7,108/c.name.length)}cqw`:""}">${locked?"???":c.name}</div><div class="role">${locked?"Carte non obtenue":(PHOTOS[c.id]&&ROLE_SVG[c.role]?roleSvg(c.role,"rin")+" ":"")+c.role}</div>
+    <div class="foot"><div class="ed">${t.name}</div><div class="nm" style="${c.name.length>9?`font-size:${Math.max(7,108/c.name.length)}cqw`:""}">${c.name}</div><div class="role">${(!locked&&PHOTOS[c.id]&&ROLE_SVG[c.role]?roleSvg(c.role,"rin")+" ":"")+c.role}</div>
       <div class="num"><span>N° ${c.num}/${c.size}</span><span>${holo?"✨ HOLO":"TF CARDS"}</span></div></div>
   </div>`;
 }
@@ -489,14 +489,17 @@ const now=()=>Date.now()+clockOff;
 let ACH=[];
 async function loadAch(){const {data,error}=await sb.rpc("my_achievements");if(!error){ACH=data||[];renderAch()}}
 function renderAch(){
-  const ready=ACH.filter(a=>!a.claimed&&a.progress>=a.target), done=ACH.filter(a=>a.claimed).length;
+  const fams={};ACH.forEach(a=>(fams[a.family]=fams[a.family]||[]).push(a));
+  const rows=Object.values(fams).map(l=>{l.sort((x,y)=>x.level-y.level);const cur=l.find(a=>!a.claimed);return {cur:cur||l[l.length-1],all:!cur,n:l.length}});
+  const ready=rows.filter(r=>!r.all&&r.cur.progress>=r.cur.target);
   const b=$("#profBadge");b.textContent=ready.length;b.style.display=ready.length?"":"none";
-  $("#achCount").textContent=`${done}/${ACH.length}`;
-  const order=a=>a.claimed?2:(a.progress>=a.target?0:1);
-  $("#achList").innerHTML=ACH.slice().sort((x,y)=>order(x)-order(y)).map(a=>{
-    const ok=a.progress>=a.target;
-    return `<div class="ach${a.claimed?" done":ok?" ready":""}"><div class="ai"><b>${esc(a.name)}</b><small>${esc(a.descr)} · ${a.progress}/${a.target}</small><div class="bar"><i style="width:${a.progress/a.target*100}%"></i></div></div>
-      ${a.claimed?`<span class="rw">✔</span>`:ok?`<button class="btn sm" data-ach="${a.id}">+${a.reward} 💎</button>`:`<span class="rw" style="opacity:.6">${a.reward} 💎</span>`}</div>`}).join("");
+  $("#achCount").textContent=`${ACH.filter(a=>a.claimed).length}/${ACH.length}`;
+  const order=r=>r.all?2:(r.cur.progress>=r.cur.target?0:1);
+  const roman=["","I","II","III","IV","V"];
+  $("#achList").innerHTML=rows.sort((x,y)=>order(x)-order(y)).map(r=>{
+    const a=r.cur, ok=!r.all&&a.progress>=a.target;
+    return `<div class="ach${r.all?" done":ok?" ready":""}"><div class="ai"><b>${esc(a.family)} ${roman[a.level]||a.level} <small>· niveau ${a.level}/${r.n}</small></b><small>${r.all?"Tous les niveaux terminés":esc(a.descr)+" · "+a.progress+"/"+a.target}</small><div class="bar"><i style="width:${r.all?100:a.progress/a.target*100}%"></i></div></div>
+      ${r.all?`<span class="rw">✔</span>`:ok?`<button class="btn sm" data-ach="${a.id}">+${a.reward} 💎</button>`:`<span class="rw" style="opacity:.6">${a.reward} 💎</span>`}</div>`}).join("");
 }
 $("#achList").addEventListener("click",async e=>{
   const b=e.target.closest("[data-ach]");if(!b||b.disabled)return;b.disabled=true;
@@ -512,7 +515,7 @@ function renderShop(){
   $("#openHourly").disabled=S.stock<1||busy;
   if(S.stock>=MAXSTOCK)$("#hourlyTimer").textContent="Stock plein";
   else{
-    const left=Date.parse(S.tick)+H-now();
+    const left=Date.parse(S.tick)+5*H-now();
     $("#hourlyTimer").textContent="+1 dans "+fmt(left);
     if(left<=0&&!refilling){refilling=true;refresh().finally(()=>refilling=false)}
   }
@@ -598,7 +601,7 @@ async function openPack(kind){
   try{pack=kind==="classic"?await rpc("buy_pack",{kind}):await rpc("open_pack",{kind})}catch(e){busy=false;renderShop();return}
   busy=false;
   pack.sort((a,b)=>rIdx(BY_ID[a.id].rar)-rIdx(BY_ID[b.id].rar));
-  ov.innerHTML=`<div class="bigpack ${kind==="daily"?"daily":kind==="classic"?"shop":""}" id="bp"><span class="tf">TF</span><div class="lbl">${{daily:"PAQUET DU JOUR",classic:"PAQUET BOUTIQUE"}[kind]||"PAQUET DE L'HEURE"}</div></div><div class="hint">Touche le paquet pour l'ouvrir</div>`;
+  ov.innerHTML=`<div class="bigpack ${kind==="daily"?"daily":kind==="classic"?"shop":""}" id="bp"><span class="tf">TF</span><div class="lbl">${{daily:"PAQUET DU JOUR",classic:"PAQUET BOUTIQUE"}[kind]||"PAQUET GRATUIT"}</div></div><div class="hint">Touche le paquet pour l'ouvrir</div>`;
   ov.classList.add("on");
   $("#bp").onclick=e=>{e.currentTarget.classList.add("shake");setTimeout(()=>showCards(pack),480)};
   refresh();
@@ -630,12 +633,12 @@ function showDetail(id){
   const c=BY_ID[id],n=S.col[id]||0,cost=RAR[c.rar].craft,t=SET_BY[c.set];
   const vers=CARDS.filter(x=>x.player===c.player);
   ov.innerHTML=`<div class="detail">${cardHTML(c,{holo:!!S.holo[id],locked:!n})}</div>
-    <div class="dinfo"><h2>${n?esc(c.name):"Carte non obtenue"}</h2>
+    <div class="dinfo"><h2>${esc(c.name)}</h2>
     <p>${t.name} · ${c.role}<br>${RAR[c.rar].name}${n?` · possédée ×${n}`:""}${S.holo[id]?" · ✨ holo":""}</p>
     ${n?`<button class="btn" id="vit">${S.showcase.includes(id)?"★ En vitrine":"Mettre en vitrine"}</button> ${n>1?`<button class="btn alt" id="recy">Recycler 1 doublon (+${RAR[c.rar].dup} 💎)</button>`:""}`
       :c.rar==="U"?`<p class="note" id="uowner">Exemplaire unique : une seule personne peut l'avoir.</p>`:`<button class="btn" id="craft" ${S.shards<cost?"disabled":""}>Fabriquer pour ${cost} 💎</button>`}
     <button class="btn alt" id="close">Fermer</button>
-    ${vers.length>1?`<div class="sect">${n?esc(c.name):"Ce joueur"} : ${vers.filter(v=>S.col[v.id]).length}/${vers.length} versions</div>
+    ${vers.length>1?`<div class="sect">${esc(c.name)} : ${vers.filter(v=>S.col[v.id]).length}/${vers.length} versions</div>
       <div class="vers">${vers.map(v=>`<div class="vslot${v.id===id?" cur":""}" data-v="${v.id}">${cardHTML(v,{holo:!!S.holo[v.id],locked:!S.col[v.id]})}</div>`).join("")}</div>`:""}
     </div>`;
   ov.classList.add("on");
@@ -738,7 +741,7 @@ $("#addForm").onsubmit=async e=>{
 function showPreview(id){
   const c=BY_ID[id];
   const own=!!S.col[id];
-  ov.innerHTML=`<div class="detail">${cardHTML(c,{locked:!own})}</div><div class="dinfo"><h2>${own?esc(c.name):"Carte non obtenue"}</h2><p>${SET_BY[c.set].name}${own?" · "+c.role:""}<br>${RAR[c.rar].name}${S.col[id]?` · tu l'as ×${S.col[id]}`:" · tu ne l'as pas"}</p><button class="btn alt" id="close">Fermer</button></div>`;
+  ov.innerHTML=`<div class="detail">${cardHTML(c,{locked:!own})}</div><div class="dinfo"><h2>${esc(c.name)}</h2><p>${SET_BY[c.set].name} · ${c.role}<br>${RAR[c.rar].name}${S.col[id]?` · tu l'as ×${S.col[id]}`:" · tu ne l'as pas"}</p><button class="btn alt" id="close">Fermer</button></div>`;
   ov.classList.add("on");$("#close").onclick=closeOv;
 }
 
