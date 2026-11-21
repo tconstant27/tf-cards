@@ -40,6 +40,7 @@ nav.tabs button.on{color:var(--gold)}
 .packcard{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:16px;display:flex;gap:16px;align-items:center}
 .minipack{width:84px;height:118px;border-radius:10px;flex:none;position:relative;overflow:hidden;
   background:linear-gradient(160deg,#3b2a7a,#151a3a 60%,#0a0c18);border:2px solid #5b4bb0;display:grid;place-items:center}
+.minipack.shop{background:linear-gradient(160deg,#0f6a7a,#082a3a 60%,#020c14);border-color:#7de3ff}
 .minipack.daily{background:linear-gradient(160deg,#7a5a12,#3a2a08 60%,#140e02);border-color:var(--gold)}
 .minipack .tf{font:700 30px Rajdhani;color:#fff;text-shadow:0 0 14px #fff8}
 .minipack::after{content:"";position:absolute;inset:-50%;background:linear-gradient(115deg,transparent 40%,#ffffff30 50%,transparent 60%);animation:shine 3s infinite}
@@ -131,6 +132,7 @@ nav.tabs button.on{color:var(--gold)}
 .bigpack{width:200px;height:290px;border-radius:16px;position:relative;cursor:pointer;
   background:linear-gradient(160deg,#4a35a0,#151a3a 60%,#0a0c18);border:3px solid #7d6bff;display:grid;place-items:center;
   box-shadow:0 0 60px #7d6bff66;animation:float 2.4s ease-in-out infinite}
+.bigpack.shop{background:linear-gradient(160deg,#16889c,#082a3a 60%,#020c14);border-color:#7de3ff;box-shadow:0 0 60px #7de3ff66}
 .bigpack.daily{background:linear-gradient(160deg,#a67a18,#3a2a08 60%,#140e02);border-color:var(--gold);box-shadow:0 0 60px #f2c14e77}
 .bigpack .tf{font:700 64px Rajdhani;color:#fff;text-shadow:0 0 24px #fff}
 .bigpack .lbl{position:absolute;bottom:22px;left:0;right:0;text-align:center;font:700 16px Rajdhani;letter-spacing:3px}
@@ -246,6 +248,17 @@ nav.tabs button{position:relative}
           <h3>Paquet du jour</h3>
           <p>7 cartes · au moins une Épique garantie</p>
           <button class="btn" id="openDaily">Ouvrir</button><span class="timer" id="dailyTimer"></span>
+        </div>
+      </div>
+    </div>
+    <div class="sect">Boutique</div>
+    <div class="packs">
+      <div class="packcard">
+        <div class="minipack shop"><span class="tf">TF</span></div>
+        <div style="flex:1">
+          <h3>Paquet boutique</h3>
+          <p>5 cartes · à acheter avec tes éclats 💎 (obtenus en recyclant tes doublons)</p>
+          <button class="btn" id="buyClassic">Acheter · 60 💎</button><span class="timer" id="shopHint"></span>
         </div>
       </div>
     </div>
@@ -473,6 +486,8 @@ function renderShop(){
     if(left<=0&&!refilling){refilling=true;refresh().finally(()=>refilling=false)}
   }
   $("#openDaily").disabled=!S.daily_ok||busy;
+  $("#buyClassic").disabled=S.shards<60||busy;
+  $("#shopHint").textContent=S.shards<60?`encore ${60-S.shards} 💎`:"";
   const mid=new Date();mid.setHours(24,0,0,0);
   const dl=mid-Date.now();
   $("#dailyTimer").textContent=S.daily_ok?"Disponible !":"Revient dans "+fmt(dl);
@@ -547,10 +562,10 @@ const closeOv=()=>{ov.classList.remove("on");ov.innerHTML=""};
 async function openPack(kind){
   if(busy)return;busy=true;renderShop();
   let pack;
-  try{pack=await rpc("open_pack",{kind})}catch(e){busy=false;renderShop();return}
+  try{pack=kind==="classic"?await rpc("buy_pack",{kind}):await rpc("open_pack",{kind})}catch(e){busy=false;renderShop();return}
   busy=false;
   pack.sort((a,b)=>rIdx(BY_ID[a.id].rar)-rIdx(BY_ID[b.id].rar));
-  ov.innerHTML=`<div class="bigpack ${kind==="daily"?"daily":""}" id="bp"><span class="tf">TF</span><div class="lbl">${kind==="daily"?"PAQUET DU JOUR":"PAQUET DE L'HEURE"}</div></div><div class="hint">Touche le paquet pour l'ouvrir</div>`;
+  ov.innerHTML=`<div class="bigpack ${kind==="daily"?"daily":kind==="classic"?"shop":""}" id="bp"><span class="tf">TF</span><div class="lbl">${{daily:"PAQUET DU JOUR",classic:"PAQUET BOUTIQUE"}[kind]||"PAQUET DE L'HEURE"}</div></div><div class="hint">Touche le paquet pour l'ouvrir</div>`;
   ov.classList.add("on");
   $("#bp").onclick=e=>{e.currentTarget.classList.add("shake");setTimeout(()=>showCards(pack),480)};
   refresh();
@@ -762,6 +777,7 @@ function switchTab(v){
 document.querySelectorAll("nav.tabs button").forEach(b=>b.onclick=()=>switchTab(b.dataset.v));
 $("#openHourly").onclick=()=>openPack("hourly");
 $("#openDaily").onclick=()=>openPack("daily");
+$("#buyClassic").onclick=()=>openPack("classic");
 $("#filters").onclick=e=>{const f=e.target.dataset.f;if(f){filter=f;renderCol()}};
 document.addEventListener("click",e=>{const s=e.target.closest("main .slot");if(s&&!ov.classList.contains("on"))showDetail(s.dataset.id)});
 $("#recycleAll").onclick=async()=>{try{const g=await rpc("recycle_all");await refresh();toast(`+${g} 💎`)}catch(e){}};
