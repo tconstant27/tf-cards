@@ -197,8 +197,12 @@ nav.tabs button.on{color:var(--gold)}
 .bigpack .face{position:absolute;left:0;right:0;top:5%;bottom:3.5%;backface-visibility:hidden;-webkit-backface-visibility:hidden;background:#f2f1ee center/cover no-repeat;box-shadow:0 18px 40px #000c,0 0 50px #f7a82344}
 .bigpack .face::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#0003,transparent 7%,transparent 93%,#0003),linear-gradient(115deg,transparent 35%,#ffffff55 48%,transparent 60%);background-size:100% 100%,250% 100%;animation:foil 2.6s linear infinite}
 .bigpack .face.fr{background-image:url(img/pack-front.jpg?v=6)}
-.bigpack .face.bk{background-image:url(img/pack-back.jpg?v=6);transform:rotateY(180deg) translateZ(6px)}
-.bigpack .face.fr{transform:translateZ(6px)}
+.bigpack .face.bk{background-image:url(img/pack-back.jpg?v=6);transform:rotateY(180deg) translateZ(8px)}
+.bigpack .face.fr{transform:translateZ(8px)}
+.bigpack .edge{position:absolute;top:5.6%;bottom:4%;width:3px;margin-left:-1.5px;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.bigpack .face{filter:brightness(var(--lit,1))}
+/* coussin : bords bombés */
+.pk-stage .bigpack .face{box-shadow:0 18px 40px #000c,inset 10px 0 14px -6px #ffffff70,inset -10px 0 14px -6px #00000040,inset 0 10px 12px -8px #ffffff50,inset 0 -10px 12px -8px #00000030}
 .sway{position:relative;width:100%;height:100%;transform-style:preserve-3d;animation:sway 5s ease-in-out infinite alternate}
 @keyframes sway{from{transform:rotateY(-13deg) rotateX(3deg)}to{transform:rotateY(13deg) rotateX(-2deg)}}
 .torn .sway{animation-play-state:paused}
@@ -766,18 +770,22 @@ async function openPack(kind){
   showPack(kind,pack);
   refresh();
 }
+const PACK_EDGES=(()=>{const N=9,R=8;let h="";
+  for(const side of ["l","r"])for(let k=0;k<N;k++){const a=(k+.5)/N*180,th=side==="l"?-a:a,light=Math.round(255-Math.sin(a*Math.PI/180)*70-(side==="l"?0:25));
+    h+=`<i class="edge" style="left:${side==="l"?0:100}%;transform:rotateY(${th.toFixed(1)}deg) translateZ(${R}px);background:rgb(${light},${light},${light-4})"></i>`}
+  return h})();
 function showPack(kind,pack){
   const COLR={C:"#e8ecf5",P:"#4cd07d",R:"#3fa7ff",E:"#b46cff",M:"#ff3d71",L:"#ffb020",U:"#ffffff"};
   const best=pack.reduce((a,p)=>Math.max(a,rIdx(BY_ID[p.id].rar)),0), bestR=R_ORDER[best];
   const holo=pack.some(p=>p.holo), uni=bestR==="U";
   const gc=holo&&!uni?"#ff3df0":COLR[bestR];
-  ov.innerHTML=`<div class="pk-stage${uni?" uni":""}${holo?" holo":""}" id="stage" style="--gc:${gc}"><div class="rays"></div><div class="pkfloat"><div class="sway"><div class="bigpack ${kind==="classic"?"shop":""}" id="bp" style="--rot:-180deg"><div class="face fr"></div><div class="face bk"></div><div class="side sl"></div><div class="side sr"></div><div class="cap"><div class="tear"></div></div><div class="crimp"></div></div></div><div class="slit"><i class="leak"></i><i class="beam"></i></div></div></div>
+  ov.innerHTML=`<div class="pk-stage${uni?" uni":""}${holo?" holo":""}" id="stage" style="--gc:${gc}"><div class="rays"></div><div class="pkfloat"><div class="sway"><div class="bigpack ${kind==="classic"?"shop":""}" id="bp" style="--rot:-180deg"><div class="face fr"></div><div class="face bk"></div>${PACK_EDGES}<div class="cap"><div class="tear"></div></div><div class="crimp"></div></div></div><div class="slit"><i class="leak"></i><i class="beam"></i></div></div></div>
     <div class="hint" id="phint">Glisse ton doigt sur le haut du paquet pour le déchirer<br><small>Touche ou fais glisser le reste pour le retourner</small></div>`;
   ov.classList.add("on");
   const stage=$("#stage"),bp=$("#bp"),tear=bp.querySelector(".tear");
   let x0=null,moved=0,done=false,mode=null,rot=-180,base=0;
   const setP=v=>{tear.style.setProperty("--tp",v);stage.style.setProperty("--tp",v);stage.classList.toggle("tremble",uni&&v>.25&&!done)};
-  const setRot=(v,anim)=>{bp.style.transition=anim?"transform .7s cubic-bezier(.3,1.2,.5,1)":"none";bp.style.setProperty("--rot",v+"deg");
+  const setRot=(v,anim)=>{bp.style.transition=anim?"transform .7s cubic-bezier(.3,1.2,.5,1)":"none";bp.style.setProperty("--rot",v+"deg");bp.style.setProperty("--lit",(1-Math.abs(Math.sin(v*Math.PI/180))*.35).toFixed(2));
     const g=((v%360)+360)%360;bp.style.setProperty("--gx",(g/360*200-50).toFixed(0)+"%")};
   requestAnimationFrame(()=>requestAnimationFrame(()=>{setRot(0,false);bp.style.transition="transform 1.3s cubic-bezier(.25,1,.4,1)";rot=0}));
   const open=()=>{if(done)return;done=true;setP(1);stage.classList.remove("tremble");buzz(uni?[40,30,40,30,120]:25);stage.classList.add("torn");$("#phint").style.visibility="hidden";
