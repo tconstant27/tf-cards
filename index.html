@@ -393,6 +393,19 @@ nav.tabs button.on{color:var(--gold)}
 .shine{position:absolute;inset:0;border-radius:12px;pointer-events:none;z-index:4;opacity:var(--so,0);transition:opacity .3s;
   background:radial-gradient(circle at var(--mx,50%) var(--my,30%),#ffffffaa 0,#ffffff22 25%,transparent 55%);mix-blend-mode:soft-light}
 .detail{touch-action:none;cursor:pointer}
+.lbbtn{width:100%;margin:0 0 12px}
+.lbbox{width:min(440px,94vw);max-height:86vh;display:flex;flex-direction:column}
+.lbbox .filters{justify-content:center;margin:6px 0 10px}
+#lbList{overflow:auto;flex:1;min-height:0;text-align:left}
+.lbrow{display:flex;align-items:center;gap:10px;padding:8px 6px;border-bottom:1px solid #ffffff12}
+.lbrow.me{background:#f5b40a1f;border-radius:10px}
+.lbr{width:28px;text-align:center;font-size:20px;flex:none}.lbn{font-size:14px;font-weight:700;color:var(--mut)}
+.lbm{flex:1;min-width:0}.lbm b{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.lbm small{color:var(--mut);font-size:11px}
+.lbt{display:flex;gap:4px;flex-wrap:wrap;margin-top:3px}
+.lt{font-style:normal;font-size:10px;font-weight:700;padding:1px 6px;border-radius:6px;background:#ffffff14}
+.lt.M{color:#ff6b6b}.lt.L{color:#ffc53d}.lt.S{color:#e9d5ff}.lt.U{color:#7df9ff}.lt.H{color:#fff}
+.lbv{font-weight:800;font-size:14px;flex:none}
+.lbhelp{font-size:11px;margin:10px 0}
 .fl3{position:relative;transform-style:preserve-3d;transition:transform .7s cubic-bezier(.3,1.3,.5,1)}
 .fl3.flipped{transform:rotateY(180deg)}
 .fl3f,.fl3b{backface-visibility:hidden;-webkit-backface-visibility:hidden}
@@ -501,6 +514,7 @@ nav.tabs button{position:relative}
     </div>
   </section>
   <section class="view" id="v-friends">
+    <button class="btn lbbtn" id="lbBtn" type="button">🏆 Classement global</button>
     <form id="addForm" class="panel" style="margin-top:0"><h3 class="disp">Ajouter un ami</h3><p>Entre le pseudo exact de ton pote.</p>
       <div class="addrow"><input id="addInput" placeholder="Pseudo" autocapitalize="off" maxlength="16"><button class="btn" type="submit">Ajouter</button></div></form>
     <div id="friendList"></div>
@@ -704,8 +718,8 @@ async function refresh(){
   const m=await rpc("get_me");
   S.pseudo=m.pseudo;S.avatar_v=m.avatar_v||0;S.created_at=m.created_at;S.shards=m.shards;S.stock=m.stock;S.tick=m.tick;S.daily_ok=m.daily_ok;
   S.packs=m.packs;S.cards_total=m.cards_total;S.showcase=(m.showcase||[]).concat([null,null,null]).slice(0,3);S.last=m.last_pack||[];
-  S.col={};S.holo={};
-  for(const [k,v] of Object.entries(m.collection||{})){if(v.q>0)S.col[k]=v.q;if(v.h)S.holo[k]=true}
+  S.col={};S.holo={};S.got={};
+  for(const [k,v] of Object.entries(m.collection||{})){if(v.q>0)S.col[k]=v.q;if(v.h)S.holo[k]=true;S.got[k]=v.t||0}
   clockOff=Date.parse(m.now)-Date.now();
   renderAll();
 }
@@ -797,7 +811,7 @@ function renderCol(){
   $("#filters").style.display="";
   $("#colTxt").textContent=`${owned} / ${CARDS.length} cartes · ${Object.keys(S.holo).length} holo`;
   $("#colBar").style.width=(owned/CARDS.length*100)+"%";
-  const fl=[["SETS","Par édition"],["PLAYERS","Par joueur"],["OWN","Possédées"],["DUP","Doublons"],...SETS_BY_RAR.map(x=>[x.id,x.short])];
+  const fl=[["SETS","Par édition"],["PLAYERS","Par joueur"],["NEW","Récentes"],["OWN","Possédées"],["DUP","Doublons"],...SETS_BY_RAR.map(x=>[x.id,x.short])];
   $("#filters").innerHTML=fl.map(([k,l])=>`<button data-f="${k}" class="${filter===k?"on":""}">${l}</button>`).join("");
   let html="";
   if(filter==="SETS"||SET_BY[filter]){
@@ -813,7 +827,7 @@ function renderCol(){
       const own=cs.filter(c=>S.col[c.id]), best=(own.length?own:cs).slice().sort(sortR)[0];
       return `<div class="slot" data-id="${best.id}">${cardHTML(best,{holo:!!S.holo[best.id],locked:!own.length})}<span class="badge ver">${own.length}/${cs.length} versions</span></div>`}).join("")}</div>`;
   }else{
-    const list=CARDS.filter(c=>filter==="DUP"?(S.col[c.id]||0)>1:S.col[c.id]).sort(sortR);
+    const list=CARDS.filter(c=>filter==="DUP"?(S.col[c.id]||0)>1:S.col[c.id]).sort(filter==="NEW"?(a,b)=>(S.got[b.id]||0)-(S.got[a.id]||0)||sortR(a,b):sortR);
     html=list.length?`<div class="grid">${list.map(c=>slotHTML(c)).join("")}</div>`:`<p style="color:var(--mut)">${filter==="DUP"?"Aucun doublon pour l'instant.":"Aucune carte pour l'instant, va ouvrir un paquet !"}</p>`;
   }
   $("#grid").innerHTML=html;
@@ -850,6 +864,23 @@ function renderAll(){renderShop();renderLast();renderCol();renderProf()}
 /* ---------- OPENING ---------- */
 const ov=$("#ov");
 const closeOv=()=>{ov.classList.remove("on");ov.innerHTML=""};
+let LB=[],lbSort="score";
+const LB_SORTS={score:["Score",r=>r.score,r=>`${r.score} pts`],cards:["Cartes",r=>r.distinct_cards*1e4+r.total_cards,r=>`${r.distinct_cards}/${CARDS.length}`],rare:["Raretés",r=>r.nb_u*1e9+r.nb_s*1e6+r.nb_l*1e3+r.nb_m,r=>""]};
+function renderLB(){
+  const [,key,val]=LB_SORTS[lbSort];
+  const rows=LB.slice().sort((a,b)=>key(b)-key(a)||b.score-a.score);
+  const medal=i=>["🥇","🥈","🥉"][i]||`<span class="lbn">${i+1}</span>`;
+  const tags=r=>[r.nb_u&&`<i class="lt U">${r.nb_u} U</i>`,r.nb_s&&`<i class="lt S">${r.nb_s} S</i>`,r.nb_l&&`<i class="lt L">${r.nb_l} L</i>`,r.nb_m&&`<i class="lt M">${r.nb_m} M</i>`,r.holos&&`<i class="lt H">${r.holos} ✨</i>`].filter(Boolean).join("");
+  $("#lbList").innerHTML=rows.map((r,i)=>`<div class="lbrow${r.id===ME?" me":""}"><div class="lbr">${medal(i)}</div>${avatarHTML(r.id,r.pseudo,r.avatar_v,"s")}<div class="lbm"><b>${esc(r.pseudo)}</b><small>${r.distinct_cards} cartes · ${r.total_cards} au total</small><div class="lbt">${tags(r)}</div></div><div class="lbv">${val(r)}</div></div>`).join("")||`<p class="note">Personne pour l'instant.</p>`;
+  document.querySelectorAll("#lbTabs button").forEach(b=>b.classList.toggle("on",b.dataset.k===lbSort));
+}
+async function showLB(){
+  ov.innerHTML=`<div class="dinfo lbbox"><h2>🏆 Classement global</h2><div class="filters" id="lbTabs">${Object.entries(LB_SORTS).map(([k,[l]])=>`<button data-k="${k}">${l}</button>`).join("")}</div><div id="lbList"><p class="note">Chargement…</p></div><p class="note lbhelp">Score : chaque carte différente rapporte selon sa rareté (C 1 · PC 2 · R 4 · É 8 · M 15 · L 30 · S 60 · U 100), +5 par holo.</p><button class="btn alt" id="close">Fermer</button></div>`;
+  ov.classList.add("on");$("#close").onclick=closeOv;
+  $("#lbTabs").onclick=e=>{const k=e.target.dataset.k;if(k){lbSort=k;renderLB()}};
+  try{LB=await rpc("leaderboard")||[];renderLB()}catch(e){$("#lbList").innerHTML=`<p class="note">Classement indisponible.</p>`}
+}
+$("#lbBtn").onclick=showLB;
 const buzz=ms=>{try{navigator.vibrate&&navigator.vibrate(ms)}catch(e){}};
 function attachTilt(host){
   const t=host&&host.querySelector(".tilt");if(!t)return;
