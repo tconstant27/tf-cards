@@ -210,27 +210,27 @@ nav.tabs button.on{color:var(--gold)}
 .bigpack .face.fr>i{background-image:url(img/pack-front.jpg?v=6)}
 .bigpack .face.bk>i{background-image:url(img/pack-back.jpg?v=6)}
 .bigpack .pm{top:7cqh;bottom:7cqh;transform:translateZ(3px);background-position:0 -7cqh;
-  box-shadow:inset 8px 0 12px -6px #ffffff60,inset -8px 0 12px -6px #00000028}
+}
 .pkfloat{filter:drop-shadow(0 18px 26px #000a)}
 .bigpack .pt{top:0;height:7.4cqh;transform-origin:50% 0;transform:rotateX(6deg);background-position:0 0}
 .bigpack .pb{bottom:0;height:7.4cqh;transform-origin:50% 100%;transform:rotateX(-6deg);background-position:0 -92.6cqh}
-.bigpack .pt::after{content:"";position:absolute;inset:0;background:linear-gradient(#00000014,#0000 85%)}
-.bigpack .pb::after{content:"";position:absolute;inset:0;background:linear-gradient(#0000 15%,#00000018)}
-.bigpack .pm::before{content:"";position:absolute;inset:0;pointer-events:none;
+.bigpack .face>i::before{content:"";position:absolute;inset:0;pointer-events:none;
   background:
-   linear-gradient(105deg,transparent 30%,#ffffff70 38%,#ffffff20 42%,transparent 50%),
-   linear-gradient(75deg,transparent 55%,#ffffff35 60%,transparent 66%),
-   radial-gradient(ellipse 60% 25% at 28% 4%,#ffffff70,transparent 70%),
-   repeating-linear-gradient(28deg,transparent 0 26px,#ffffff14 26px 27px,transparent 27px 47px),
-   repeating-linear-gradient(-62deg,transparent 0 34px,#0000000d 34px 35px,transparent 35px 59px);
-  background-size:220% 100%,220% 100%,100% 100%,100% 100%,100% 100%;
-  background-position:var(--gx,0%) 0,calc(100% - var(--gx,0%)) 0,0 0,0 0,0 0}
-.bigpack .pm::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(115deg,transparent 35%,#ffffff40 48%,transparent 60%);background-size:250% 100%;animation:foil 2.6s linear infinite}
+   linear-gradient(105deg,transparent 30%,#ffffff60 38%,#ffffff1a 42%,transparent 50%),
+   linear-gradient(75deg,transparent 55%,#ffffff30 60%,transparent 66%),
+   linear-gradient(90deg,#ffffff38,#0000 6%,#0000 94%,#0000001c),
+   linear-gradient(#00000012,#0000 7cqh,#0000 93cqh,#00000016),
+   repeating-linear-gradient(28deg,transparent 0 26px,#ffffff12 26px 27px,transparent 27px 47px),
+   repeating-linear-gradient(-62deg,transparent 0 34px,#0000000b 34px 35px,transparent 35px 59px);
+  background-size:220% 100cqh,220% 100cqh,100% 100cqh,100% 100cqh,100% 100cqh,100% 100cqh;
+  background-repeat:no-repeat;
+  background-position:var(--gx,0%) var(--oy),calc(100% - var(--gx,0%)) var(--oy),0 var(--oy),0 var(--oy),0 var(--oy),0 var(--oy)}
+.bigpack .pt{--oy:0}.bigpack .pm{--oy:-7cqh}.bigpack .pb{--oy:-92.6cqh}
 .bigpack .pside{position:absolute;top:5%;bottom:3.5%;width:6px;margin-left:-3px;transform:rotateY(90deg);
   clip-path:polygon(50% 0,100% 7.4%,100% 92.6%,50% 100%,0 92.6%,0 7.4%);
   background:linear-gradient(90deg,#a9a8a3,#e9e8e4 30%,#ffffff 50%,#e2e1dc 70%,#9f9e99);filter:brightness(calc(.75 + var(--lit,1)*.25))}
 .torn .bigpack .pm{box-shadow:0 -6px 30px color-mix(in srgb,var(--gc) 45%,transparent)}
-.bigpack.mini .pm{box-shadow:inset 0 0 0 1px #ffffff55,inset 2px 0 4px #ffffff40,inset -2px 0 4px #0000002a}
+
 /* (ancien coussin) */
 .pk-stage .bigpack .face{box-shadow:0 18px 40px #000c,inset 10px 0 14px -6px #ffffff70,inset -10px 0 14px -6px #00000040,inset 0 10px 12px -8px #ffffff50,inset 0 -10px 12px -8px #00000030}
 .sway{position:relative;width:100%;height:100%;transform-style:preserve-3d;animation:sway 5s ease-in-out infinite alternate}
