@@ -515,13 +515,13 @@ const GAMES = {
   LEG:{icon:"🔥"},
 };
 const RAR = {
-  C:{name:"Commune",rate:48.19,dup:1,craft:40},
+  C:{name:"Commune",rate:48.39,dup:1,craft:40},
   P:{name:"Peu commune",rate:25,dup:2,craft:70},
   R:{name:"Rare",rate:15,dup:3,craft:100},
   E:{name:"Épique",rate:7.5,dup:5,craft:250},
   M:{name:"Mythique",rate:3,dup:10,craft:800},
   L:{name:"Légendaire",rate:1,dup:20,craft:2000},
-  S:{name:"Signed",rate:0.3,dup:30,craft:null},
+  S:{name:"Signed",rate:0.1,dup:30,craft:null},
   U:{name:"Unique",rate:0.01,dup:0,craft:null},
 };
 const R_ORDER=["C","P","R","E","M","L","S","U"];
@@ -721,7 +721,7 @@ function renderShop(){
   $("#shopHint").textContent=S.shards<100?`encore ${100-S.shards} 💎`:"";
 }
 function renderRates(){
-  $("#ratesList").innerHTML=R_ORDER.map(r=>`<div class="row"><span style="color:var(--${r.toLowerCase()})">${RAR[r].name}${r==="U"?" (1 seul exemplaire)":""}</span><span>${RAR[r].rate.toLocaleString("fr-FR")} %</span></div>`).join("");
+  $("#ratesList").innerHTML=R_ORDER.map(r=>`<div class="row"><span style="color:var(--${r.toLowerCase()})">${RAR[r].name}${r==="U"?" (1 seul exemplaire)":r==="S"?" (3 exemplaires par carte)":""}</span><span>${RAR[r].rate.toLocaleString("fr-FR")} %</span></div>`).join("");
 }
 function renderLast(){
   const l=(S.last||[]).filter(p=>BY_ID[p.id]);
@@ -907,7 +907,7 @@ function showDetail(id){
   const vers=CARDS.filter(x=>x.player===c.player);
   ov.innerHTML=`<div class="detail">${tiltCard(cardHTML(c,{holo:!!S.holo[id],locked:!n}))}</div>
     <div class="dinfo"><h2>${esc(c.name)}</h2>
-    <p>${t.name} · ${c.role}<br>${RAR[c.rar].name}${n?` · possédée ×${n}`:""}${S.holo[id]?" · ✨ holo":""}</p>
+    <p>${t.name} · ${c.role}<br>${RAR[c.rar].name}${n?` · possédée ×${n}`:""}${S.holo[id]?" · ✨ holo":""}</p>${c.rar==="S"?`<p class="note" id="sstock">Édition limitée : 3 exemplaires seulement.</p>`:""}
     ${n?`<button class="btn" id="vit">${S.showcase.includes(id)?"★ En vitrine":"Mettre en vitrine"}</button> ${n>1?`<button class="btn alt" id="recy">Recycler 1 doublon (+${RAR[c.rar].dup} 💎)</button>`:""}`
       :c.rar==="U"?`<p class="note" id="uowner">Exemplaire unique : une seule personne peut l'avoir.</p>`:`<p class="note">Pas encore obtenue : ouvre des paquets ou échange-la avec un ami.</p>`}
     <button class="btn alt" id="close">Fermer</button>
@@ -915,6 +915,7 @@ function showDetail(id){
       <div class="vers">${vers.map(v=>`<div class="vslot${v.id===id?" cur":""}" data-v="${v.id}">${cardHTML(v,{holo:!!S.holo[v.id],locked:!S.col[v.id]})}</div>`).join("")}</div>`:""}
     </div>`;
   ov.classList.add("on");
+  if(c.rar==="S")sb.rpc("limited_stock").then(({data})=>{const o=(data||[]).find(x=>x.card_id===id),el=$("#sstock");if(el&&o){const left=Math.max(0,o.max_copies-o.minted);el.textContent=left?`Édition limitée : ${left} exemplaire${left>1?"s":""} sur ${o.max_copies} encore dans les paquets.`:`Édition limitée : les ${o.max_copies} exemplaires ont tous été tirés.`}});
   if(c.rar==="U")sb.rpc("unique_owners").then(({data})=>{const o=(data||[]).find(x=>x.card_id===id),el=$("#uowner");if(el)el.textContent=o?`Exemplaire unique, possédé par ${o.pseudo}.`:"Exemplaire unique, encore dans les paquets !"});
   attachTilt(ov.querySelector(".detail"));
   $("#close").onclick=closeOv;
