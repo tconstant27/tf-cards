@@ -93,9 +93,9 @@ nav.tabs button.on{color:var(--gold)}
 .card.S{border-color:transparent;box-shadow:0 0 0 2px #fff,0 0 22px #c9d6ff}
 .card.S::after{content:"";position:absolute;inset:0;pointer-events:none;z-index:2;border-radius:9px;border:3px solid transparent;background:linear-gradient(115deg,#ffffff,#b9c4d6,#ffffff,#8f9bb0,#ffffff) border-box;background-size:300% 100%;animation:rainbow 3s linear infinite;-webkit-mask:linear-gradient(#000 0 0) padding-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask:linear-gradient(#000 0 0) padding-box,linear-gradient(#000 0 0);mask-composite:exclude}
 .card.S .rl{background:linear-gradient(90deg,#fff,#cfd8ea,#fff);color:#111;border-color:#fff}
-.card .sig{position:absolute;left:22%;right:4%;top:36%;bottom:24%;z-index:3;pointer-events:none;transform:rotate(-10deg);
+.card .sig{position:absolute;right:5%;width:52%;top:47%;height:22%;z-index:3;pointer-events:none;transform:rotate(-6deg);
   background:linear-gradient(110deg,#ff9ae4,#ffe39a,#a6ffc9,#9ae6ff,#cdb2ff,#ff9ae4);background-size:300% 300%;animation:prism 3.5s linear infinite;
-  -webkit-mask:var(--sm) center/contain no-repeat;mask:var(--sm) center/contain no-repeat;filter:drop-shadow(0 0 .4cqw #000) drop-shadow(0 0 2.5cqw #fffc)}
+  -webkit-mask:var(--sm) right bottom/contain no-repeat;mask:var(--sm) right bottom/contain no-repeat;filter:drop-shadow(0 0 .4cqw #000) drop-shadow(0 0 2.5cqw #fffc)}
 @keyframes prism{to{background-position:300% 300%}}
 .card .tph{display:flex}.card .tph img{flex:1;min-width:0;height:100%;object-fit:cover;object-position:50% 15%;border-left:.6cqw solid #000a}
 .card .rbg{position:absolute;left:50%;top:45%;width:92cqw;height:92cqw;transform:translate(-50%,-50%);color:#fff;opacity:.22;stroke-width:1.3}
@@ -601,7 +601,7 @@ function cardHTML(c,{holo=false,locked=false}={}){
   return `<div class="card ${c.rar}${t.raw?" raw":""}${holo?" holo":""}${locked?" locked":""}${t.win?" win":""}" style="--t1:${t.t1};--t2:${t.t2}">
     <div class="hdr"><div class="rl">${RAR[c.rar].name}</div><div class="team">${t.short}</div></div>
     ${TEAM_PHOTOS[c.id]?`<div class="ph tph">${TEAM_PHOTOS[c.id].map(f=>`<img src="img/${f}.jpg?v=${IMG_V}" alt="" loading="lazy">`).join("")}</div>`:WIDE.has(c.id)?`<div class="ph phw"><img class="bgb" src="img/${PHOTOS[c.id]}.jpg?v=${IMG_V}" alt="" loading="lazy"><img class="fg" src="img/${PHOTOS[c.id]}.jpg?v=${IMG_V}" alt="" loading="lazy"></div>`:PHOTOS[c.id]?`<img class="ph${PHOTOS[c.id].endsWith(".png")?" cut":""}" src="img/${PHOTOS[c.id].includes(".")?PHOTOS[c.id]:PHOTOS[c.id]+".jpg"}?v=${IMG_V}" alt="" loading="lazy">`:`${c.champ?`<img class="ph champbg" src="${champUrl(c.champ)}" alt="" loading="lazy" onerror="this.remove()">`:roleSvg(c.role,"rbg")}<div class="art${c.champ?" noart":""}"><em>${locked?"🔒":(ROLE_SVG[c.role]&&!SET_BY[c.set].win?roleSvg(c.role,"ric"):c.icon)}</em></div>`}
-    ${c.rar==="S"&&!locked?`<i class="sig" style="--sm:url(img/sig/${c.id.slice(7)}.png?v=${IMG_V})"></i>`:""}<div class="foot"><div class="ed">${t.name}</div><div class="nm" style="${c.name.length>9?`font-size:${Math.max(7,108/c.name.length)}cqw`:""}">${c.name}</div><div class="role">${(!locked&&PHOTOS[c.id]&&ROLE_SVG[c.role]?roleSvg(c.role,"rin")+" ":"")+c.role}</div>
+    ${c.rar==="S"&&!locked?`<i class="sig" style="--sm:url(img/sig/${c.id.slice(7)}-r.png?v=${IMG_V})"></i>`:""}<div class="foot"><div class="ed">${t.name}</div><div class="nm" style="${c.name.length>9?`font-size:${Math.max(7,108/c.name.length)}cqw`:""}">${c.name}</div><div class="role">${(!locked&&PHOTOS[c.id]&&ROLE_SVG[c.role]?roleSvg(c.role,"rin")+" ":"")+c.role}</div>
       <div class="num"><span>N° ${c.num}/${c.size}</span><span>${holo?"✨ HOLO":"TF CARDS"}</span></div></div>
   </div>`;
 }
