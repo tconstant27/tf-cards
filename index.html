@@ -558,7 +558,7 @@ const SETS = [
   {id:"nt6",champs:["Gnar", "Kha'Zix", "Ryze", "Zeri", "Karma"],name:"Nexus Tour · Étape 6",short:"NT É6",game:"LOL",rar:"C",t1:"#2a8a4a",t2:"#081f0e",pos:true,p:["Clawser","Nika","K0zZ","Spouk","Nono"]},
   {id:"ntpo",champs:["Rumble", "Qiyana", "Cassiopeia", "Ziggs", "Galio"],name:"Nexus Tour · Playoffs",short:"PLAYOFFS NT",game:"LOL",rar:"E",t1:"#0f3fa8",t2:"#030a24",pos:true,p:["Clawser","Nika","K0zZ","Spouk","Nono"]},
   {id:"ga",name:"Gamers Assembly",short:"GA LOL",game:"LOL",rar:"R",t1:"#8a1f6a",t2:"#1f0618",pos:true,p:["Stayn","Nika","Dex","Morro","Nono"]},
-  {id:"lyon",name:"Lyon Esport",short:"LES LOL",game:"LOL",rar:"R",t1:"#b0242f",t2:"#24060a",pos:true,p:["Clawser","Nika","Batou","Obli","Nono"]},
+  {id:"lyon",name:"League of Legends LES",short:"LES LOL",game:"LOL",rar:"R",t1:"#b0242f",t2:"#24060a",pos:true,p:["Clawser","Nika","Batou","Obli","Nono"]},
   {id:"moon",champs:["Volibear", "Brand", "Taliyah", "Miss Fortune", "Neeko"],name:"Triforce Moon",short:"MOON",game:"LOL",rar:"P",t1:"#3a3a7a",t2:"#0a0a1f",p:["Taher","Vincc","Jerem","Toto","Momo"]},
   {id:"ouat",name:"Triforce Moon · OUAT Winners",short:"OUAT",game:"LOL",rar:"E",win:true,t1:"#5a4ab0",t2:"#120c2a",p:["Fazz","Momo","Hiero","Toto","Jerem"],sub:["Taher","Vincc"]},
   {id:"tfnx",champs:["Yone", "Dr. Mundo", "Lissandra", "Ashe", "Braum"],name:"TFNX",short:"TFNX",game:"LOL",rar:"P",t1:"#5a2a8a",t2:"#14061f",p:["YNS","Taher","Azorus","Norma","Truc Much"]},
@@ -623,7 +623,7 @@ function cardHTML(c,{holo=false,locked=false}={}){
   return `<div class="card ${c.rar}${t.raw?" raw":""}${holo?" holo":""}${locked?" locked":""}${t.win?" win":""}" style="--t1:${t.t1};--t2:${t.t2}">
     <div class="hdr"><div class="rl">${RAR[c.rar].name}</div>${t.noset?"":`<div class="team">${t.short}</div>`}</div>
     ${TEAM_PHOTOS[c.id]?`<div class="ph tph">${TEAM_PHOTOS[c.id].map(f=>`<img src="img/${f}.jpg?v=${IMG_V}" alt="" loading="lazy">`).join("")}</div>`:WIDE.has(c.id)?`<div class="ph phw"><img class="bgb" src="img/${PHOTOS[c.id]}.jpg?v=${IMG_V}" alt="" loading="lazy"><img class="fg" src="img/${PHOTOS[c.id]}.jpg?v=${IMG_V}" alt="" loading="lazy"></div>`:PHOTOS[c.id]?`<img class="ph${PHOTOS[c.id].endsWith(".png")?" cut":""}" src="img/${PHOTOS[c.id].includes(".")?PHOTOS[c.id]:PHOTOS[c.id]+".jpg"}?v=${IMG_V}" alt="" loading="lazy">`:`${c.champ?`<img class="ph champbg" src="${champUrl(c.champ)}" alt="" loading="lazy" onerror="this.remove()">`:roleSvg(c.role,"rbg")}<div class="art${c.champ?" noart":""}"><em>${locked?"🔒":(ROLE_SVG[c.role]&&!SET_BY[c.set].win?roleSvg(c.role,"ric"):c.icon)}</em></div>`}
-    ${c.rar==="S"&&!locked?`<i class="sig" style="--sm:url(img/sig/${c.id.slice(7)}-r.png?v=${IMG_V})"></i>`:""}<div class="foot">${t.noset?"":`<div class="ed">${t.name}</div>`}<div class="nm" style="${c.name.length>9?`font-size:${Math.max(7,108/c.name.length)}cqw`:""}">${c.name}</div><div class="role">${(!locked&&PHOTOS[c.id]&&ROLE_SVG[c.role]?roleSvg(c.role,"rin")+" ":"")+c.role}</div>
+    ${c.rar==="S"&&!locked?`<i class="sig" style="--sm:url(img/sig/${c.id.slice(7)}-r.png?v=${IMG_V})"></i>`:""}<div class="foot"><div class="nm" style="${c.name.length>9?`font-size:${Math.max(7,108/c.name.length)}cqw`:""}">${c.name}</div><div class="role">${(!locked&&PHOTOS[c.id]&&ROLE_SVG[c.role]?roleSvg(c.role,"rin")+" ":"")+c.role}</div>
       <div class="num"><span>N° ${c.num}/${c.size}</span><span>${holo?"✨ HOLO":"TF CARDS"}</span></div></div>
   </div>`;
 }
