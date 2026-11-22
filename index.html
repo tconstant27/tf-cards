@@ -562,7 +562,7 @@ const SETS = [
   {id:"speciales",name:"Spéciales",short:"SPÉCIALE",game:"LEG",rar:"M",t1:"#5a1a40",t2:"#12040c",p:["LES","GA","Ratoon"],keys:["les","ga","ratoon"],roles:["Lyon Esport","Gamers Assembly","Mascotte"]},
   {id:"uniques",noset:true,name:"Cartes uniques",short:"UNIQUE",game:"LEG",rar:"U",raw:true,t1:"#20203a",t2:"#05050f",p:["Xayah & Rakan","Nono & Toto","CEOs ALT"],keys:["xayahrakan","nonototo","ceos"],roles:["Toto & Momo","Duo","Momo, Vincc & toto"]},
   {id:"signed",noset:true,name:"Cartes signées",short:"SIGNED",game:"LEG",rar:"S",raw:true,t1:"#1c1c28",t2:"#050508",p:["toto","Vincc","Momo","AON","KGB","Morro"],keys:["toto","vincc","momo","aon","kgb","morro"],roles:["CEO","CEO","CEO","Légende du club","Légende du club","Légende du club"]},
-  {id:"bsk",name:"BSK Summer Clash · Winner",short:"BSK",game:"SSBU",rar:"E",win:true,t1:"#d4a017",t2:"#2a1a00",p:["MonnaieBison30"]},
+  {id:"bsk",name:"BSK Summer Clash · Winner",short:"BSK SUMMER",game:"SSBU",rar:"E",win:true,t1:"#d4a017",t2:"#2a1a00",p:["MonnaieBison30"]},
 ];
 const SET_BY=Object.fromEntries(SETS.map(s=>[s.id,s]));
 const SETS_BY_RAR=SETS.map((x,i)=>[x,i]).sort((a,b)=>R_ORDER.indexOf(a[0].rar)-R_ORDER.indexOf(b[0].rar)||a[1]-b[1]).map(a=>a[0]);
