@@ -146,6 +146,14 @@ nav.tabs button.on{color:var(--gold)}
 .bigpack.shop .lbl{color:#1d1d1d}
 .bigpack.daily{background:linear-gradient(160deg,#a67a18,#3a2a08 60%,#140e02);border-color:var(--gold);box-shadow:0 0 60px #f2c14e77}
 .bigpack .tf{font:700 64px Rajdhani;color:#fff;text-shadow:0 0 24px #fff}
+/* déchirure */
+.pk-stage .hit{position:absolute;inset:-40px -60px;z-index:20}
+.torn .hit{display:none}
+.cap.peel{z-index:4;filter:drop-shadow(0 3px 3px #0007)}
+.cap.keep{z-index:3}
+.tearline{position:absolute;top:5.2%;height:3px;width:0;margin-top:-1px;z-index:5;opacity:0;pointer-events:none;
+  background:linear-gradient(90deg,#fff,color-mix(in srgb,var(--gc,#fff) 70%,#fff),#fff);box-shadow:0 0 6px #fff,0 0 14px color-mix(in srgb,var(--gc,#fff) 70%,transparent);
+  -webkit-mask:repeating-linear-gradient(90deg,#000 0 5px,#0008 5px 7px);mask:repeating-linear-gradient(90deg,#000 0 5px,#0008 5px 7px)}
 /* paquet illustré (ratons) */
 .packthumb{width:92px;aspect-ratio:200/310;flex:none;position:relative;filter:drop-shadow(0 8px 14px #000a)}
 .bigpack.mini{width:100%;height:100%;animation:none;background:transparent!important;box-shadow:none!important;cursor:default}
@@ -313,7 +321,7 @@ nav.tabs button.on{color:var(--gold)}
 .tear{position:absolute;left:0;bottom:-2px;height:3px;width:calc(var(--tp,0)*100%);background:#fff;box-shadow:0 0 10px #fff,0 0 22px #ffe9a0;border-radius:3px}
 .rays{position:absolute;left:50%;top:10%;width:260%;aspect-ratio:1;transform:translate(-50%,-50%);border-radius:50%;opacity:0;pointer-events:none;
   background:repeating-conic-gradient(from 0deg,#fff6 0 6deg,transparent 6deg 18deg);-webkit-mask:radial-gradient(circle,#000 0,transparent 65%);mask:radial-gradient(circle,#000 0,transparent 65%)}
-.torn .cap{animation:capFly .75s cubic-bezier(.3,.6,.4,1) forwards}
+
 @keyframes capFly{to{transform:translate(-30%,-220%) rotate(-38deg);opacity:0}}
 .uni.torn .rays{opacity:1;animation:spin 5s linear infinite,raysIn .6s ease-out;background:repeating-conic-gradient(from 0deg,#ff3d7155 0 5deg,transparent 5deg 10deg,#ffb02055 10deg 15deg,transparent 15deg 20deg,#4cd07d55 20deg 25deg,transparent 25deg 30deg,#3fa7ff55 30deg 35deg,transparent 35deg 40deg,#b46cff55 40deg 45deg,transparent 45deg 50deg)}
 @keyframes spin{to{transform:translate(-50%,-50%) rotate(360deg)}}
@@ -856,30 +864,54 @@ function showPack(kind,pack){
   const best=pack.reduce((a,p)=>Math.max(a,rIdx(BY_ID[p.id].rar)),0), bestR=R_ORDER[best];
   const holo=pack.some(p=>p.holo), uni=bestR==="U";
   const gc=holo&&!uni?"#ff3df0":COLR[bestR];
-  ov.innerHTML=`<div class="pk-stage${uni?" uni":""}${holo?" holo":""}" id="stage" style="--gc:${gc}"><div class="rays"></div><div class="pkfloat"><div class="sway"><div class="bigpack ${kind==="classic"?"shop":""}" id="bp" style="--rot:-180deg"><div class="face fr"><i class="pm"></i><i class="pt"></i><i class="pb"></i></div><div class="face bk"><i class="pm"></i><i class="pt"></i><i class="pb"></i></div>${PACK_EDGES}<div class="cap"><div class="tear"></div></div><div class="crimp"></div></div></div><div class="slit"><i class="leak"></i><i class="beam"></i></div></div></div>
-    <div class="hint" id="phint">Glisse ton doigt sur le haut du paquet pour le déchirer<br><small>Touche ou fais glisser le reste pour le retourner</small></div>`;
+  ov.innerHTML=`<div class="pk-stage${uni?" uni":""}${holo?" holo":""}" id="stage" style="--gc:${gc}"><div class="rays"></div><div class="hit"></div><div class="pkfloat"><div class="sway"><div class="bigpack ${kind==="classic"?"shop":""}" id="bp" style="--rot:-180deg"><div class="face fr"><i class="pm"></i><i class="pt"></i><i class="pb"></i></div><div class="face bk"><i class="pm"></i><i class="pt"></i><i class="pb"></i></div>${PACK_EDGES}<div class="cap keep" id="capK"></div><div class="cap peel" id="capP"></div><div class="tearline" id="tline"></div><div class="crimp"></div></div></div><div class="slit"><i class="leak"></i><i class="beam"></i></div></div></div>
+    <div class="hint" id="phint">Fais glisser ton doigt le long du haut du paquet pour le déchirer<br><small>Touche ou fais glisser le reste pour le retourner</small></div>`;
   ov.classList.add("on");
-  const stage=$("#stage"),bp=$("#bp"),tear=bp.querySelector(".tear");
-  let x0=null,moved=0,done=false,mode=null,rot=-180,base=0;
-  const setP=v=>{tear.style.setProperty("--tp",v);stage.style.setProperty("--tp",v);stage.classList.toggle("tremble",uni&&v>.25&&!done)};
+  const stage=$("#stage"),bp=$("#bp"),capK=$("#capK"),capP=$("#capP"),tline=$("#tline");
+  let x0=null,y0=null,moved=0,done=false,mode=null,rot=-180,base=0,dir=0,prog=0,anim=null;
+  const jag=(()=>{let pts=[];for(let i=0;i<=24;i++)pts.push([i/24,(i%2?0:1)]);return pts})();
+  const draw=v=>{prog=v;stage.style.setProperty("--tp",v);stage.classList.toggle("tremble",uni&&v>.25&&!done);
+    const L=dir>=0, edge=(L?v:1-v)*100;
+    // bande restante : du côté non déchiré, bord dentelé
+    const W=bp.getBoundingClientRect().width||1;
+    capK.style.setProperty("left",L?edge+"%":"0","important");capK.style.setProperty("right",L?"0":(100-edge)+"%","important");capK.style.display=(L?edge>=99.5:edge<=.5)?"none":"";
+    capK.style.backgroundPosition=L?`${-edge/100*W}px 0`:"0 0";capK.style.webkitMaskPosition=capK.style.maskPosition=L?`${-edge/100*W}px 0, 0 var(--z)`:"0 0, 0 var(--z)";
+    // morceau arraché : suit le doigt, se soulève et se plie
+    capP.style.setProperty("left",L?"0":edge+"%","important");capP.style.setProperty("right",L?(100-edge)+"%":"0","important");capP.style.display=v<=0?"none":"";
+    capP.style.backgroundPosition=L?"0 0":`${-edge/100*W}px 0`;capP.style.webkitMaskPosition=capP.style.maskPosition=L?"0 0, 0 var(--z)":`${-edge/100*W}px 0, 0 var(--z)`;
+    capP.style.transformOrigin=L?"100% 100%":"0% 100%";
+    capP.style.transform=`translateY(${(-v*4).toFixed(1)}px) rotate(${((L?1:-1)*(4+v*10)).toFixed(1)}deg)`;
+    const lk=stage.querySelector(".slit .leak");if(lk&&!done){lk.style.left=L?"0":`${edge}%`;lk.style.right=L?`${100-edge}%`:"0"}
+    tline.style.left=L?"0":`${edge}%`;tline.style.width=`${v*100}%`;tline.style.opacity=v>0?1:0};
+  const animateTo=(to,ms,cb)=>{cancelAnimationFrame(anim);const from=prog,t0=performance.now();
+    const step=t=>{const k=Math.min(1,(t-t0)/ms),e=1-Math.pow(1-k,3);draw(from+(to-from)*e);if(k<1)anim=requestAnimationFrame(step);else cb&&cb()};anim=requestAnimationFrame(step)};
   const setRot=(v,anim)=>{bp.style.transition=anim?"transform .7s cubic-bezier(.3,1.2,.5,1)":"none";bp.style.setProperty("--rot",v+"deg");bp.style.setProperty("--lit",(1-Math.abs(Math.sin(v*Math.PI/180))*.35).toFixed(2));
     const g=((v%360)+360)%360;bp.style.setProperty("--gx",(g/360*200-50).toFixed(0)+"%")};
   requestAnimationFrame(()=>requestAnimationFrame(()=>{setRot(0,false);bp.style.transition="transform 1.3s cubic-bezier(.25,1,.4,1)";rot=0}));
-  const open=()=>{if(done)return;done=true;setP(1);stage.classList.remove("tremble");buzz(uni?[40,30,40,30,120]:25);stage.classList.add("torn");$("#phint").style.visibility="hidden";
+  const open=()=>{if(done)return;done=true;stage.classList.remove("tremble");buzz(uni?[40,30,40,30,120]:25);
+    animateTo(1,220,()=>{stage.classList.add("torn");capP.style.transition="transform .7s cubic-bezier(.3,.6,.4,1),opacity .7s";capP.style.transform=`translate(${dir>=0?60:-60}%,-260%) rotate(${dir>=0?-35:35}deg)`;capP.style.opacity=0});
+    $("#phint").style.visibility="hidden";
     const tOut=uni?2300:1500;
     if(uni){setTimeout(()=>{const f=document.createElement("div");f.className="flash";document.body.appendChild(f);setTimeout(()=>f.remove(),800);
       particles(stage,["#ff3d71","#ffb020","#4cd07d","#3fa7ff","#b46cff","#fff"],70,260)},900)}
     setTimeout(()=>stage.classList.add("out"),tOut);setTimeout(()=>revealStack(pack),tOut+550)};
-  stage.addEventListener("pointerdown",e=>{if(done)return;const r=bp.getBoundingClientRect();x0=e.clientX;moved=0;base=rot;
-    mode=(e.clientY-r.top)<r.height*.22?"tear":"spin";try{stage.setPointerCapture(e.pointerId)}catch(err){}});
-  stage.addEventListener("pointermove",e=>{if(x0===null||done)return;const w=bp.getBoundingClientRect().width,dx=e.clientX-x0,d=Math.abs(dx);moved=Math.max(moved,d);
-    if(mode==="tear"){tear.style.transition="none";setP(Math.min(1,d/(w*.8)));if(d>w*.8)open()}
+  stage.addEventListener("pointerdown",e=>{if(done)return;const r=bp.getBoundingClientRect();x0=e.clientX;y0=e.clientY;moved=0;base=rot;
+    mode=(e.clientY-r.top)<r.height*.24?"tear":"spin";
+    if(mode==="tear"){cancelAnimationFrame(anim);const fx=(e.clientX-r.left)/r.width;dir=prog>0?dir:(fx<.5?1:-1)}
+    try{stage.setPointerCapture(e.pointerId)}catch(err){}});
+  stage.addEventListener("pointermove",e=>{if(x0===null||done)return;const r=bp.getBoundingClientRect(),dx=e.clientX-x0;moved=Math.max(moved,Math.abs(dx));
+    if(mode==="tear"){
+      if(prog===0&&Math.abs(dx)>6)dir=dx>0?1:-1;
+      const fx=Math.min(1,Math.max(0,(e.clientX-r.left)/r.width)), v=dir>=0?fx:1-fx;
+      if(v>prog){draw(v);if(v>=.98)open()}}
     else{rot=base+dx*1.1;setRot(rot,false)}});
   stage.addEventListener("pointerup",()=>{if(done||x0===null)return;
-    if(mode==="tear"){tear.style.transition="width .3s";setP(0);
-      if(moved<10){const h=$("#phint");h.classList.remove("nudge");void h.offsetWidth;h.classList.add("nudge");bp.classList.remove("wiggle");void bp.offsetWidth}}
+    if(mode==="tear"){
+      if(prog>=.5)open();
+      else{animateTo(0,280);if(moved<10){const h=$("#phint");h.classList.remove("nudge");void h.offsetWidth;h.classList.add("nudge")}}}
     else{rot=moved<10?base+180:Math.round(rot/180)*180;setRot(rot,true)}
     x0=null});
+  stage.addEventListener("pointercancel",()=>{if(!done&&mode==="tear"&&prog<.5)animateTo(0,280);x0=null});
 }
 function revealStack(pack){
   const n=pack.length;let idx=0,isOpen=false;
