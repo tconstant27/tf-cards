@@ -919,7 +919,7 @@ async function openPack(kind){
   showPack(kind,pack);
   refresh();
 }
-const PACK_EDGES='<i class="pside rac" style="left:0"></i><i class="pside" style="left:100%"></i>';
+const PACK_EDGES='<i class="pside rac" style="left:0"></i><i class="pside rac" style="left:100%"></i>';
 function showPack(kind,pack){
   const COLR={C:"#e8ecf5",P:"#4cd07d",R:"#3fa7ff",E:"#b46cff",M:"#ff3d71",L:"#ffb020",S:"#dfe6ff",U:"#ffffff"};
   const best=pack.reduce((a,p)=>Math.max(a,rIdx(BY_ID[p.id].rar)),0), bestR=R_ORDER[best];
