@@ -201,7 +201,34 @@ nav.tabs button.on{color:var(--gold)}
 .bigpack .face.fr{transform:translateZ(8px)}
 .bigpack .edge{position:absolute;top:5.6%;bottom:4%;width:3px;margin-left:-1.5px;backface-visibility:hidden;-webkit-backface-visibility:hidden}
 .bigpack .face{filter:brightness(var(--lit,1))}
-/* coussin : bords bombés */
+/* coussin bombé : la face se courbe vers la soudure en haut et en bas */
+.pk-stage .bigpack .face,.bigpack.mini .face{background:none!important;box-shadow:none!important;filter:none!important;transform-style:preserve-3d;container-type:size;backface-visibility:visible}
+.bigpack .face.fr{transform:none}
+.bigpack .face.bk{transform:rotateY(180deg)}
+.bigpack .face::before,.bigpack .face::after{display:none}
+.bigpack .face>i{position:absolute;left:0;right:0;display:block;backface-visibility:hidden;-webkit-backface-visibility:hidden;background-repeat:no-repeat;background-size:100% 100cqh;filter:brightness(var(--lit,1));overflow:hidden}
+.bigpack .face.fr>i{background-image:url(img/pack-front.jpg?v=6)}
+.bigpack .face.bk>i{background-image:url(img/pack-back.jpg?v=6)}
+.bigpack .pm{top:7cqh;bottom:7cqh;transform:translateZ(3px);background-position:0 -7cqh;
+  box-shadow:0 18px 40px #000b,inset 8px 0 12px -6px #ffffff70,inset -8px 0 12px -6px #00000035}
+.bigpack .pt{top:0;height:7.4cqh;transform-origin:50% 0;transform:rotateX(10deg);background-position:0 0}
+.bigpack .pb{bottom:0;height:7.4cqh;transform-origin:50% 100%;transform:rotateX(-10deg);background-position:0 -92.6cqh}
+.bigpack .pt::after{content:"";position:absolute;inset:0;background:linear-gradient(#0000002e,#ffffff30)}
+.bigpack .pb::after{content:"";position:absolute;inset:0;background:linear-gradient(#ffffff18,#00000038)}
+.bigpack .pm::before{content:"";position:absolute;inset:0;pointer-events:none;
+  background:
+   linear-gradient(105deg,transparent 30%,#ffffff70 38%,#ffffff20 42%,transparent 50%),
+   linear-gradient(75deg,transparent 55%,#ffffff35 60%,transparent 66%),
+   radial-gradient(ellipse 60% 25% at 28% 4%,#ffffff70,transparent 70%),
+   repeating-linear-gradient(28deg,transparent 0 26px,#ffffff14 26px 27px,transparent 27px 47px),
+   repeating-linear-gradient(-62deg,transparent 0 34px,#0000000d 34px 35px,transparent 35px 59px);
+  background-size:220% 100%,220% 100%,100% 100%,100% 100%,100% 100%;
+  background-position:var(--gx,0%) 0,calc(100% - var(--gx,0%)) 0,0 0,0 0,0 0}
+.bigpack .pm::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(115deg,transparent 35%,#ffffff40 48%,transparent 60%);background-size:250% 100%;animation:foil 2.6s linear infinite}
+.bigpack .edge{top:11.5%!important;bottom:10%!important;width:2px!important;margin-left:-1px!important}
+.torn .bigpack .pm{box-shadow:0 18px 40px #000c,0 -6px 30px color-mix(in srgb,var(--gc) 45%,transparent)}
+.bigpack.mini .pm{box-shadow:inset 0 0 0 1px #ffffff55,inset 2px 0 4px #ffffff40,inset -2px 0 4px #0000002a}
+/* (ancien coussin) */
 .pk-stage .bigpack .face{box-shadow:0 18px 40px #000c,inset 10px 0 14px -6px #ffffff70,inset -10px 0 14px -6px #00000040,inset 0 10px 12px -8px #ffffff50,inset 0 -10px 12px -8px #00000030}
 .sway{position:relative;width:100%;height:100%;transform-style:preserve-3d;animation:sway 5s ease-in-out infinite alternate}
 @keyframes sway{from{transform:rotateY(-13deg) rotateX(3deg)}to{transform:rotateY(13deg) rotateX(-2deg)}}
@@ -398,7 +425,7 @@ nav.tabs button{position:relative}
   <section class="view on" id="v-shop">
     <div class="packs">
       <div class="packcard">
-        <div class="packthumb"><div class="bigpack mini"><div class="face fr"></div><div class="cap"></div><div class="crimp"></div></div></div>
+        <div class="packthumb"><div class="bigpack mini"><div class="face fr"><i class="pm"></i><i class="pt"></i><i class="pb"></i></div><div class="cap"></div><div class="crimp"></div></div></div>
         <div style="flex:1">
           <h3>Paquet gratuit</h3>
           <p>5 cartes · 1 paquet offert toutes les 3 h (stock max 3)</p>
@@ -424,7 +451,7 @@ nav.tabs button{position:relative}
     <div class="sect">Paquets</div>
     <div class="packs">
       <div class="packcard">
-        <div class="packthumb"><div class="bigpack mini"><div class="face fr"></div><div class="cap"></div><div class="crimp"></div></div></div>
+        <div class="packthumb"><div class="bigpack mini"><div class="face fr"><i class="pm"></i><i class="pt"></i><i class="pb"></i></div><div class="cap"></div><div class="crimp"></div></div></div>
         <div style="flex:1">
           <h3>Paquet boutique</h3>
           <p>5 cartes · même taux qu'un paquet gratuit</p>
@@ -770,7 +797,7 @@ async function openPack(kind){
   showPack(kind,pack);
   refresh();
 }
-const PACK_EDGES=(()=>{const N=9,R=8;let h="";
+const PACK_EDGES=(()=>{const N=6,R=3;let h="";
   for(const side of ["l","r"])for(let k=0;k<N;k++){const a=(k+.5)/N*180,th=side==="l"?-a:a,light=Math.round(255-Math.sin(a*Math.PI/180)*70-(side==="l"?0:25));
     h+=`<i class="edge" style="left:${side==="l"?0:100}%;transform:rotateY(${th.toFixed(1)}deg) translateZ(${R}px);background:rgb(${light},${light},${light-4})"></i>`}
   return h})();
@@ -779,7 +806,7 @@ function showPack(kind,pack){
   const best=pack.reduce((a,p)=>Math.max(a,rIdx(BY_ID[p.id].rar)),0), bestR=R_ORDER[best];
   const holo=pack.some(p=>p.holo), uni=bestR==="U";
   const gc=holo&&!uni?"#ff3df0":COLR[bestR];
-  ov.innerHTML=`<div class="pk-stage${uni?" uni":""}${holo?" holo":""}" id="stage" style="--gc:${gc}"><div class="rays"></div><div class="pkfloat"><div class="sway"><div class="bigpack ${kind==="classic"?"shop":""}" id="bp" style="--rot:-180deg"><div class="face fr"></div><div class="face bk"></div>${PACK_EDGES}<div class="cap"><div class="tear"></div></div><div class="crimp"></div></div></div><div class="slit"><i class="leak"></i><i class="beam"></i></div></div></div>
+  ov.innerHTML=`<div class="pk-stage${uni?" uni":""}${holo?" holo":""}" id="stage" style="--gc:${gc}"><div class="rays"></div><div class="pkfloat"><div class="sway"><div class="bigpack ${kind==="classic"?"shop":""}" id="bp" style="--rot:-180deg"><div class="face fr"><i class="pm"></i><i class="pt"></i><i class="pb"></i></div><div class="face bk"><i class="pm"></i><i class="pt"></i><i class="pb"></i></div>${PACK_EDGES}<div class="cap"><div class="tear"></div></div><div class="crimp"></div></div></div><div class="slit"><i class="leak"></i><i class="beam"></i></div></div></div>
     <div class="hint" id="phint">Glisse ton doigt sur le haut du paquet pour le déchirer<br><small>Touche ou fais glisser le reste pour le retourner</small></div>`;
   ov.classList.add("on");
   const stage=$("#stage"),bp=$("#bp"),tear=bp.querySelector(".tear");
