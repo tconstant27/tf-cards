@@ -484,7 +484,7 @@ nav.tabs button{position:relative}
         <div class="packthumb"><div class="bigpack mini"><div class="face fr"><i class="pm"></i><i class="pt"></i><i class="pb"></i></div><div class="cap"></div><div class="crimp"></div></div></div>
         <div style="flex:1">
           <h3>Paquet gratuit</h3>
-          <p>5 cartes · 1 paquet offert toutes les heures (stock max 3)</p>
+          <p>5 cartes · paquets offerts régulièrement (stock max 3)</p>
           <div class="stock" id="stockBar"></div>
           <button class="btn" id="openHourly">Ouvrir</button><span class="timer" id="hourlyTimer"></span>
         </div>
@@ -723,7 +723,7 @@ async function onSession(session){
 async function refresh(){
   loadAch();
   const m=await rpc("get_me");
-  S.pseudo=m.pseudo;S.avatar_v=m.avatar_v||0;S.created_at=m.created_at;S.shards=m.shards;S.stock=m.stock;S.tick=m.tick;S.daily_ok=m.daily_ok;
+  S.pseudo=m.pseudo;S.avatar_v=m.avatar_v||0;S.created_at=m.created_at;S.shards=m.shards;S.stock=m.stock;S.tick=m.tick;S.next=m.next_ms||H;S.daily_ok=m.daily_ok;
   S.packs=m.packs;S.cards_total=m.cards_total;S.showcase=(m.showcase||[]).concat([null,null,null]).slice(0,3);S.last=m.last_pack||[];
   S.col={};S.holo={};S.got={};
   for(const [k,v] of Object.entries(m.collection||{})){if(v.q>0)S.col[k]=v.q;if(v.h)S.holo[k]=true;S.got[k]=v.t||0}
@@ -762,7 +762,7 @@ function renderShop(){
   $("#openHourly").disabled=S.stock<1||busy;
   if(S.stock>=MAXSTOCK)$("#hourlyTimer").textContent="Stock plein";
   else{
-    const left=Date.parse(S.tick)+H-now();
+    const left=Date.parse(S.tick)+(S.next||H)-now();
     $("#hourlyTimer").textContent="+1 dans "+fmt(left);
     if(left<=0&&!refilling){refilling=true;refresh().finally(()=>refilling=false)}
   }
