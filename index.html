@@ -210,11 +210,12 @@ nav.tabs button.on{color:var(--gold)}
 .bigpack .face.fr>i{background-image:url(img/pack-front.jpg?v=6)}
 .bigpack .face.bk>i{background-image:url(img/pack-back.jpg?v=6)}
 .bigpack .pm{top:7cqh;bottom:7cqh;transform:translateZ(3px);background-position:0 -7cqh;
-  box-shadow:0 18px 40px #000b,inset 8px 0 12px -6px #ffffff70,inset -8px 0 12px -6px #00000035}
-.bigpack .pt{top:0;height:7.4cqh;transform-origin:50% 0;transform:rotateX(10deg);background-position:0 0}
-.bigpack .pb{bottom:0;height:7.4cqh;transform-origin:50% 100%;transform:rotateX(-10deg);background-position:0 -92.6cqh}
-.bigpack .pt::after{content:"";position:absolute;inset:0;background:linear-gradient(#0000002e,#ffffff30)}
-.bigpack .pb::after{content:"";position:absolute;inset:0;background:linear-gradient(#ffffff18,#00000038)}
+  box-shadow:inset 8px 0 12px -6px #ffffff60,inset -8px 0 12px -6px #00000028}
+.pkfloat{filter:drop-shadow(0 18px 26px #000a)}
+.bigpack .pt{top:0;height:7.4cqh;transform-origin:50% 0;transform:rotateX(6deg);background-position:0 0}
+.bigpack .pb{bottom:0;height:7.4cqh;transform-origin:50% 100%;transform:rotateX(-6deg);background-position:0 -92.6cqh}
+.bigpack .pt::after{content:"";position:absolute;inset:0;background:linear-gradient(#00000014,#0000 85%)}
+.bigpack .pb::after{content:"";position:absolute;inset:0;background:linear-gradient(#0000 15%,#00000018)}
 .bigpack .pm::before{content:"";position:absolute;inset:0;pointer-events:none;
   background:
    linear-gradient(105deg,transparent 30%,#ffffff70 38%,#ffffff20 42%,transparent 50%),
@@ -228,7 +229,7 @@ nav.tabs button.on{color:var(--gold)}
 .bigpack .pside{position:absolute;top:5%;bottom:3.5%;width:6px;margin-left:-3px;transform:rotateY(90deg);
   clip-path:polygon(50% 0,100% 7.4%,100% 92.6%,50% 100%,0 92.6%,0 7.4%);
   background:linear-gradient(90deg,#a9a8a3,#e9e8e4 30%,#ffffff 50%,#e2e1dc 70%,#9f9e99);filter:brightness(calc(.75 + var(--lit,1)*.25))}
-.torn .bigpack .pm{box-shadow:0 18px 40px #000c,0 -6px 30px color-mix(in srgb,var(--gc) 45%,transparent)}
+.torn .bigpack .pm{box-shadow:0 -6px 30px color-mix(in srgb,var(--gc) 45%,transparent)}
 .bigpack.mini .pm{box-shadow:inset 0 0 0 1px #ffffff55,inset 2px 0 4px #ffffff40,inset -2px 0 4px #0000002a}
 /* (ancien coussin) */
 .pk-stage .bigpack .face{box-shadow:0 18px 40px #000c,inset 10px 0 14px -6px #ffffff70,inset -10px 0 14px -6px #00000040,inset 0 10px 12px -8px #ffffff50,inset 0 -10px 12px -8px #00000030}
