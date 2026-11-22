@@ -964,12 +964,13 @@ function hubCreate(){
         doneLabel:{text:"Publier l'annonce",optional:true},
         onDone:async sel=>{try{await rpc("listing_create",{p_card:id,p_wants:Object.keys(sel)});toast("Ta carte est dans le hub !");showHub("mine")}catch(e){showHub("mine")}}})}});
 }
-function hubOffer(l){
+async function hubOffer(l){
   if(!l)return;const c=BY_ID[l.card_id],wants=(l.wants||[]).filter(w=>S.col[w]);
-  const filters=wants.length?[["WANT","Ce qu'il cherche"],["DUP","Mes doublons"],["ALL","Toutes mes cartes"]]:[["DUP","Mes doublons"],["ALL","Toutes mes cartes"]];
+  let them={};try{them=(await fetchUser(l.user_id)).col}catch(e){}
+  const filters=[...(wants.length?[["WANT","Ce qu'il cherche"]]:[]),["MISS",`Qui lui manquent`],["DUP","Mes doublons"],["ALL","Toutes mes cartes"]];
   cardPicker({title:`Offre pour ${esc(c.name)}`,sub:`Choisis ce que tu donnes à ${esc(l.pseudo)} en échange (retouche une carte pour en mettre plusieurs exemplaires).`,multi:true,max:8,
     filters,qtyOf:id=>S.col[id]||0,
-    list:f=>CARDS.filter(x=>S.col[x.id]&&(f==="ALL"||(f==="WANT"?wants.includes(x.id):S.col[x.id]>1))).sort(sortR),
+    list:f=>CARDS.filter(x=>S.col[x.id]&&(f==="ALL"||(f==="WANT"?wants.includes(x.id):f==="MISS"?!them[x.id]:S.col[x.id]>1))).sort(sortR),
     doneLabel:{text:"Envoyer l'offre"},
     onDone:async sel=>{try{await rpc("listing_offer",{p_id:l.id,p_give:Object.entries(sel).map(([id,qty])=>({id,qty}))});toast("Offre envoyée à "+l.pseudo);SOCIAL.names[l.user_id]=l.pseudo;loadSocial();showHub("all")}catch(e){showHub("all")}}});
 }
