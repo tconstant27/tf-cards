@@ -289,6 +289,9 @@ nav.tabs button.on{color:var(--gold)}
 .ach .bar{height:6px;margin-top:6px}.ach .rw{font:700 15px Rajdhani;color:#7de3ff;white-space:nowrap}
 .search{margin:4px 0 10px}.search input{width:100%;background:var(--panel);border:1px solid var(--line);color:var(--txt);font:500 15px Inter;padding:11px 14px;border-radius:12px}
 .search input:focus{outline:none;border-color:var(--gold)}
+.avatar{position:relative;overflow:hidden}.avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1}
+.avatar.xl{width:120px;height:120px;border-radius:30px;font-size:52px}
+.avwrap{position:relative;cursor:pointer;flex:none}.avedit{position:absolute;right:-6px;bottom:-6px;background:var(--gold);border-radius:50%;width:26px;height:26px;display:grid;place-items:center;font-size:13px;box-shadow:0 2px 6px #000a;z-index:2}
 .sethead{display:flex;justify-content:space-between;align-items:flex-end;margin:22px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line)}
 .sethead b{font:700 18px Rajdhani;display:block}
 .sethead div span{font-size:12px}
@@ -498,7 +501,7 @@ nav.tabs button{position:relative}
   <button data-v="col"><span class="ic">📚</span>Collection</button>
   <button data-v="store"><span class="ic">🛒</span>Boutique</button>
   <button data-v="friends"><span class="ic">🤝</span>Amis<span id="navBadge" style="display:none"></span></button>
-  <button data-v="prof"><span class="ic">👤</span>Profil<span id="profBadge" class="navb" style="display:none"></span></button>
+  <button data-v="prof"><span class="ic">🦝</span>Profil<span id="profBadge" class="navb" style="display:none"></span></button>
 </nav>
 </div>
 <div class="ov" id="ov"></div>
@@ -673,7 +676,7 @@ async function onSession(session){
 async function refresh(){
   loadAch();
   const m=await rpc("get_me");
-  S.pseudo=m.pseudo;S.created_at=m.created_at;S.shards=m.shards;S.stock=m.stock;S.tick=m.tick;S.daily_ok=m.daily_ok;
+  S.pseudo=m.pseudo;S.avatar_v=m.avatar_v||0;S.created_at=m.created_at;S.shards=m.shards;S.stock=m.stock;S.tick=m.tick;S.daily_ok=m.daily_ok;
   S.packs=m.packs;S.cards_total=m.cards_total;S.showcase=(m.showcase||[]).concat([null,null,null]).slice(0,3);S.last=m.last_pack||[];
   S.col={};S.holo={};
   for(const [k,v] of Object.entries(m.collection||{})){if(v.q>0)S.col[k]=v.q;if(v.h)S.holo[k]=true}
@@ -731,6 +734,24 @@ function renderLast(){
 /* ---------- COLLECTION ---------- */
 let filter="SETS";
 const slotHTML=(c,col=S.col,holo=S.holo)=>{const n=col[c.id]||0;return `<div class="slot" data-id="${c.id}">${cardHTML(c,{holo:!!holo[c.id],locked:!n})}${n>1?`<span class="badge cnt">×${n}</span>`:""}${holo[c.id]?`<span class="badge hol">HOLO</span>`:""}</div>`};
+const avatarHTML=(id,pseudo,v,cls="")=>v>0?`<div class="avatar ${cls}"><img src="${SB_URL}/storage/v1/object/public/avatars/${id}.jpg?v=${v}" alt="" onerror="this.remove()"><span>${esc((pseudo||"?")[0].toUpperCase())}</span></div>`:`<div class="avatar ${cls}"><span>${esc((pseudo||"?")[0].toUpperCase())}</span></div>`;
+async function pickAvatar(){
+  const inp=document.createElement("input");inp.type="file";inp.accept="image/*";
+  inp.onchange=async()=>{const f=inp.files&&inp.files[0];if(!f)return;
+    try{
+      const img=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=URL.createObjectURL(f)});
+      const sz=320,c=document.createElement("canvas");c.width=c.height=sz;const k=Math.min(img.width,img.height);
+      c.getContext("2d").drawImage(img,(img.width-k)/2,(img.height-k)/2,k,k,0,0,sz,sz);
+      const blob=await new Promise(r=>c.toBlob(r,"image/jpeg",.85));
+      toast("Envoi de la photo…");
+      const {error}=await sb.storage.from("avatars").upload(ME+".jpg",blob,{upsert:true,contentType:"image/jpeg"});
+      if(error){toast("Erreur : "+error.message);return}
+      S.avatar_v=await rpc("set_avatar",{p_has:true});renderProf();toast("Photo de profil mise à jour !");
+    }catch(e){toast("Impossible de lire cette image")}
+  };
+  inp.click();
+}
+async function removeAvatar(){try{await sb.storage.from("avatars").remove([ME+".jpg"]);S.avatar_v=await rpc("set_avatar",{p_has:false});renderProf();toast("Photo retirée")}catch(e){}}
 const norm=t=>String(t||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
 let colQ="";
 function renderCol(){
@@ -783,7 +804,8 @@ function statsKPI(col,holo,packs){
 }
 function renderProf(){
   const done=SETS.filter(x=>CARDS.filter(c=>c.set===x.id).every(c=>S.col[c.id])).length;
-  $("#phead").innerHTML=`<div class="avatar">${esc(S.pseudo.slice(0,1).toUpperCase())}</div><div style="flex:1;min-width:0"><h2>${esc(S.pseudo)}</h2><small>Collectionneur depuis le ${new Date(S.created_at).toLocaleDateString("fr-FR")} · ${done} édition${done>1?"s":""} complète${done>1?"s":""}</small></div>`;
+  $("#phead").innerHTML=`<div class="avwrap" id="avBtn">${avatarHTML(ME,S.pseudo,S.avatar_v)}<span class="avedit">📷</span></div><div style="flex:1;min-width:0"><h2>${esc(S.pseudo)}</h2><small>Collectionneur depuis le ${new Date(S.created_at).toLocaleDateString("fr-FR")} · ${done} édition${done>1?"s":""} complète${done>1?"s":""}</small></div>`;
+  $("#avBtn").onclick=()=>{ov.innerHTML=`<div class="dinfo" style="max-width:300px"><div style="display:flex;justify-content:center;margin-bottom:14px">${avatarHTML(ME,S.pseudo,S.avatar_v,"xl")}</div><h2>Photo de profil</h2><p>Elle est visible par tes amis.</p><button class="btn" id="avPick">Choisir une photo</button> ${S.avatar_v>0?'<button class="btn alt" id="avDel">Retirer</button>':''}<div style="margin-top:12px"><button class="btn alt" id="close">Fermer</button></div></div>`;ov.classList.add("on");$("#close").onclick=closeOv;$("#avPick").onclick=()=>{closeOv();pickAvatar()};const d=$("#avDel");if(d)d.onclick=()=>{closeOv();removeAvatar()}};
   const show=S.showcase.map(id=>id&&S.col[id]?id:null);
   $("#vitrine").innerHTML=vitrineHTML(show,S.holo,true);
   document.querySelectorAll("#vitrine .vslot3").forEach(el=>el.onclick=()=>pickShowcase(+el.dataset.s));
@@ -983,13 +1005,13 @@ function renderFriends(){
   const n=inReq.length+inT.length;
   const b=$("#navBadge");b.textContent=n;b.style.display=n?"":"none";
   let h="";
-  if(inReq.length)h+=`<div class="sect">Demandes d'ami reçues</div>${inReq.map(f=>`<div class="frow"><div class="avatar s">${esc(f.pseudo[0].toUpperCase())}</div><b>${esc(f.pseudo)}</b><span style="flex:1"></span><button class="btn sm" data-fa="${f.id}">Accepter</button><button class="btn alt sm" data-fd="${f.id}">✕</button></div>`).join("")}`;
+  if(inReq.length)h+=`<div class="sect">Demandes d'ami reçues</div>${inReq.map(f=>`<div class="frow">${avatarHTML(f.id,f.pseudo,f.avatar_v,"s")}<b>${esc(f.pseudo)}</b><span style="flex:1"></span><button class="btn sm" data-fa="${f.id}">Accepter</button><button class="btn alt sm" data-fd="${f.id}">✕</button></div>`).join("")}`;
   if(inT.length)h+=`<div class="sect">Échanges reçus</div>${inT.map(tradeHTML).join("")}`;
   h+=`<div class="sect">Mes amis (${friends.length})</div>`;
-  h+=friends.length?friends.map(f=>`<div class="frow click" data-fp="${f.id}"><div class="avatar s">${esc(f.pseudo[0].toUpperCase())}</div><div style="flex:1;min-width:0"><b>${esc(f.pseudo)}</b><small>${f.uniques}/${CARDS.length} cartes</small></div><span class="chev">›</span></div>`).join("")
+  h+=friends.length?friends.map(f=>`<div class="frow click" data-fp="${f.id}">${avatarHTML(f.id,f.pseudo,f.avatar_v,"s")}<div style="flex:1;min-width:0"><b>${esc(f.pseudo)}</b><small>${f.uniques}/${CARDS.length} cartes</small></div><span class="chev">›</span></div>`).join("")
     :`<p class="note">Ajoute tes potes avec leur pseudo pour voir leur collection et échanger des cartes.</p>`;
   if(outT.length)h+=`<div class="sect">Échanges envoyés</div>${outT.map(tradeHTML).join("")}`;
-  if(outReq.length)h+=`<div class="sect">Demandes envoyées</div>${outReq.map(f=>`<div class="frow"><div class="avatar s">${esc(f.pseudo[0].toUpperCase())}</div><b>${esc(f.pseudo)}</b><span style="flex:1"></span><small>en attente</small><button class="btn alt sm" data-fr="${f.id}">Annuler</button></div>`).join("")}`;
+  if(outReq.length)h+=`<div class="sect">Demandes envoyées</div>${outReq.map(f=>`<div class="frow">${avatarHTML(f.id,f.pseudo,f.avatar_v,"s")}<b>${esc(f.pseudo)}</b><span style="flex:1"></span><small>en attente</small><button class="btn alt sm" data-fr="${f.id}">Annuler</button></div>`).join("")}`;
   if(hist.length)h+=`<div class="sect">Historique des échanges</div>${hist.map(tradeHTML).join("")}`;
   $("#friendList").innerHTML=h;
 }
@@ -1028,7 +1050,7 @@ function showPreview(id){
 }
 
 async function fetchUser(uid){
-  const [p,c]=await Promise.all([sb.from("profiles").select("id,pseudo,created_at,packs,showcase").eq("id",uid).single(),
+  const [p,c]=await Promise.all([sb.from("profiles").select("id,pseudo,created_at,packs,showcase,avatar_v").eq("id",uid).single(),
     sb.from("collection").select("card_id,qty,holo").eq("user_id",uid)]);
   if(p.error||c.error){toast("Impossible de charger ce profil");throw p.error||c.error}
   const col={},holo={};(c.data||[]).forEach(r=>{if(r.qty>0)col[r.card_id]=r.qty;if(r.holo)holo[r.card_id]=true});
@@ -1039,7 +1061,7 @@ async function showFriend(uid,missingOnly=false){
   const show=(F.showcase||[]).concat([null,null,null]).slice(0,3).map(id=>id&&F.col[id]?id:null);
   const list=CARDS.filter(c=>F.col[c.id]&&(!missingOnly||!S.col[c.id])).sort(sortR);
   ov.innerHTML=`<div class="fview">
-    <div class="phead"><div class="avatar">${esc(F.pseudo[0].toUpperCase())}</div><div style="flex:1;min-width:0"><h2>${esc(F.pseudo)}</h2><small>Collectionneur depuis le ${new Date(F.created_at).toLocaleDateString("fr-FR")}</small></div><button class="btn alt sm" id="close">✕</button></div>
+    <div class="phead">${avatarHTML(F.id,F.pseudo,F.avatar_v)}<div style="flex:1;min-width:0"><h2>${esc(F.pseudo)}</h2><small>Collectionneur depuis le ${new Date(F.created_at).toLocaleDateString("fr-FR")}</small></div><button class="btn alt sm" id="close">✕</button></div>
     <div class="sect">Vitrine</div><div class="vitrine">${vitrineHTML(show,F.holo,false)}</div>
     <div class="ovact" style="justify-content:center"><button class="btn" id="tradeBtn">Proposer un échange</button></div>
     <div class="sect">Statistiques</div><div class="kpis">${statsKPI(F.col,F.holo,F.packs)}</div>
