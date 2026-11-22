@@ -5,6 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <title>TF Cards — Triforce Esport</title>
 <meta name="theme-color" content="#0b0d14">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="img/icon-192.png">
+<link rel="apple-touch-icon" href="img/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="TF Cards">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
@@ -505,6 +511,7 @@ nav.tabs button{position:relative}
     <div class="panel"><h3 class="disp">Doublons</h3><p id="dupTxt"></p><button class="btn" id="recycleAll" type="button">Recycler tous les doublons</button></div>
     <div class="panel raritybars"><h3 class="disp">Complétion par rareté</h3><div id="rarBars" style="margin-top:8px"></div></div>
     <div class="panel raritybars"><h3 class="disp">Éditions complétées</h3><div id="setBars" style="margin-top:8px"></div></div>
+    <div class="panel" id="installPanel"><h3 class="disp">Installer l'application</h3><p id="installTxt">Ajoute TF Cards à ton écran d'accueil pour l'ouvrir comme une vraie appli.</p><button class="btn" id="installBtn">Installer TF Cards</button></div>
     <div style="text-align:center;margin:24px 0"><button class="btn alt" id="logout">Se déconnecter</button></div>
   </section>
 </main>
@@ -1173,6 +1180,23 @@ setInterval(()=>{if(ME&&!document.hidden)loadSocial()},30000);
 
 window.addEventListener("error",e=>toast("Erreur : "+e.message));
 window.addEventListener("unhandledrejection",e=>toast("Erreur : "+((e.reason&&e.reason.message)||e.reason)));
+/* ---------- INSTALLATION (PWA) ---------- */
+let installEvt=null;
+try{if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{})}catch(e){}
+const standalone=()=>matchMedia("(display-mode: standalone)").matches||navigator.standalone;
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();installEvt=e;renderInstall()});
+window.addEventListener("appinstalled",()=>{installEvt=null;toast("TF Cards est installé !");renderInstall()});
+function renderInstall(){
+  const p=$("#installPanel");if(!p)return;
+  if(standalone()){p.style.display="none";return}
+  const ios=/iphone|ipad|ipod/i.test(navigator.userAgent);
+  $("#installBtn").style.display=installEvt?"":"none";
+  $("#installTxt").innerHTML=installEvt?"Ajoute TF Cards à ton écran d'accueil pour l'ouvrir comme une vraie appli."
+    :ios?"Sur iPhone : touche le bouton Partager de Safari, puis « Sur l'écran d'accueil »."
+    :"Sur Android : ouvre le menu ⋮ de Chrome, puis « Installer l'application » ou « Ajouter à l'écran d'accueil ».";
+}
+$("#installBtn").onclick=async()=>{if(!installEvt)return;installEvt.prompt();try{await installEvt.userChoice}catch(e){}installEvt=null;renderInstall()};
+renderInstall();
 /* ---------- BOOT ---------- */
 renderRates();
 if(!window.supabase){$("#auth").innerHTML=`<div class="authbox"><p class="note err">Impossible de charger le jeu. Vérifie ta connexion puis recharge la page.</p></div>`}
