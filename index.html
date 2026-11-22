@@ -475,7 +475,7 @@ nav.tabs button{position:relative}
 <div id="app" style="display:none">
 <header class="top">
   <div class="brand"><div class="logo"><img src="img/logo.png" alt="Triforce"></div><div><h1>TF CARDS</h1><small>Triforce Esport</small></div></div>
-  <div class="shards"><img class="bag" src="img/bag.png?v=2" alt=""> <b id="shardCount">0</b> déchets</div>
+  <div class="shards"><img class="bag" src="img/bag.png?v=3" alt=""> <b id="shardCount">0</b> déchets</div>
 </header>
 <main class="wrap">
   <section class="view on" id="v-shop">
@@ -504,7 +504,7 @@ nav.tabs button{position:relative}
     <div id="grid"></div>
   </section>
   <section class="view" id="v-store">
-    <div class="panel" style="margin-top:0;display:flex;align-items:center;justify-content:space-between"><div><h3 class="disp">Tes déchets</h3><p style="margin:2px 0 0">Recycle tes doublons dans ton profil pour en gagner.</p></div><div class="disp" style="font-size:28px;color:#7de3ff;white-space:nowrap;margin-left:12px"><img class="bag" src="img/bag.png?v=2" alt=""> <span id="storeShards">0</span></div></div>
+    <div class="panel" style="margin-top:0;display:flex;align-items:center;justify-content:space-between"><div><h3 class="disp">Tes déchets</h3><p style="margin:2px 0 0">Recycle tes doublons dans ton profil pour en gagner.</p></div><div class="disp" style="font-size:28px;color:#7de3ff;white-space:nowrap;margin-left:12px"><img class="bag" src="img/bag.png?v=3" alt=""> <span id="storeShards">0</span></div></div>
     <div class="sect">Paquets</div>
     <div class="packs">
       <div class="packcard">
@@ -512,7 +512,7 @@ nav.tabs button{position:relative}
         <div style="flex:1">
           <h3>Paquet boutique</h3>
           <p>5 cartes · même taux qu'un paquet gratuit</p>
-          <button class="btn" id="buyClassic">Acheter · 100 <img class="bag" src="img/bag.png?v=2" alt=""></button><span class="timer" id="shopHint"></span>
+          <button class="btn" id="buyClassic">Acheter · 100 <img class="bag" src="img/bag.png?v=3" alt=""></button><span class="timer" id="shopHint"></span>
         </div>
       </div>
     </div>
@@ -668,7 +668,7 @@ let sb=null, ME=null, clockOff=0, busy=false;
 let S={col:{},holo:{},shards:0,stock:0,tick:null,daily_ok:false,packs:0,cards_total:0,showcase:[null,null,null],pseudo:"",created_at:null};
 let SOCIAL={friends:[],trades:[],names:{}};
 
-const BAG=`<img class="bag" src="img/bag.png?v=2" alt="">`;
+const BAG=`<img class="bag" src="img/bag.png?v=3" alt="">`;
 const bagify=t=>esc(t).replace(/ ?🗑️/g,"&nbsp;"+BAG);
 function toast(m){const t=$("#toast");t.innerHTML=bagify(m);t.classList.add("on");clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove("on"),2600)}
 function fmt(ms){ms=Math.max(0,ms);const h=Math.floor(ms/H),m=Math.floor(ms%H/60000),s=Math.floor(ms%60000/1000);return (h?h+"h ":"")+String(m).padStart(2,"0")+"m "+String(s).padStart(2,"0")+"s"}
