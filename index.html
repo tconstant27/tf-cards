@@ -251,6 +251,7 @@ nav.tabs button.on{color:var(--gold)}
 .bigpack .pside{position:absolute;top:5%;bottom:3.5%;width:6px;margin-left:-3px;transform:rotateY(90deg);
   clip-path:polygon(50% 0,100% 7.4%,100% 92.6%,50% 100%,0 92.6%,0 7.4%);
   background:linear-gradient(90deg,#a9a8a3,#e9e8e4 30%,#ffffff 50%,#e2e1dc 70%,#9f9e99);filter:brightness(calc(.75 + var(--lit,1)*.25))}
+.bigpack .pside.rac{background:linear-gradient(90deg,#00000080,#0000 30%,#ffffff22 50%,#0000 70%,#00000080),url(img/pack-front.jpg?v=6) 0 0/4000% 100% no-repeat}
 .pk-stage .bigpack::after{content:"";position:absolute;left:0;right:0;top:5%;bottom:3.5%;pointer-events:none;transform:translateZ(-2px);transition:box-shadow .4s}
 .torn .bigpack::after{box-shadow:0 -6px 30px color-mix(in srgb,var(--gc) 45%,transparent)}
 
@@ -918,7 +919,7 @@ async function openPack(kind){
   showPack(kind,pack);
   refresh();
 }
-const PACK_EDGES='<i class="pside" style="left:0"></i><i class="pside" style="left:100%"></i>';
+const PACK_EDGES='<i class="pside rac" style="left:0"></i><i class="pside" style="left:100%"></i>';
 function showPack(kind,pack){
   const COLR={C:"#e8ecf5",P:"#4cd07d",R:"#3fa7ff",E:"#b46cff",M:"#ff3d71",L:"#ffb020",S:"#dfe6ff",U:"#ffffff"};
   const best=pack.reduce((a,p)=>Math.max(a,rIdx(BY_ID[p.id].rar)),0), bestR=R_ORDER[best];
