@@ -251,7 +251,8 @@ nav.tabs button.on{color:var(--gold)}
 .bigpack .pside{position:absolute;top:5%;bottom:3.5%;width:6px;margin-left:-3px;transform:rotateY(90deg);
   clip-path:polygon(50% 0,100% 7.4%,100% 92.6%,50% 100%,0 92.6%,0 7.4%);
   background:linear-gradient(90deg,#a9a8a3,#e9e8e4 30%,#ffffff 50%,#e2e1dc 70%,#9f9e99);filter:brightness(calc(.75 + var(--lit,1)*.25))}
-.torn .bigpack .pm{box-shadow:0 -6px 30px color-mix(in srgb,var(--gc) 45%,transparent)}
+.pk-stage .bigpack::after{content:"";position:absolute;left:0;right:0;top:5%;bottom:3.5%;pointer-events:none;transform:translateZ(-2px);transition:box-shadow .4s}
+.torn .bigpack::after{box-shadow:0 -6px 30px color-mix(in srgb,var(--gc) 45%,transparent)}
 
 /* (ancien coussin) */
 .pk-stage .bigpack .face{box-shadow:0 18px 40px #000c,inset 10px 0 14px -6px #ffffff70,inset -10px 0 14px -6px #00000040,inset 0 10px 12px -8px #ffffff50,inset 0 -10px 12px -8px #00000030}
