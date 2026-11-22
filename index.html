@@ -392,7 +392,12 @@ nav.tabs button.on{color:var(--gold)}
 .sc .tilt{width:100%;height:100%}
 .shine{position:absolute;inset:0;border-radius:12px;pointer-events:none;z-index:4;opacity:var(--so,0);transition:opacity .3s;
   background:radial-gradient(circle at var(--mx,50%) var(--my,30%),#ffffffaa 0,#ffffff22 25%,transparent 55%);mix-blend-mode:soft-light}
-.detail{touch-action:none}
+.detail{touch-action:none;cursor:pointer}
+.fl3{position:relative;transform-style:preserve-3d;transition:transform .7s cubic-bezier(.3,1.3,.5,1)}
+.fl3.flipped{transform:rotateY(180deg)}
+.fl3f,.fl3b{backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.fl3b{position:absolute;inset:0;transform:rotateY(180deg);border-radius:12px;overflow:hidden;box-shadow:0 4px 14px #0008}
+.fl3b .cback{border-radius:12px}
 /* detail */
 .detail{width:min(300px,80vw)}
 .dinfo{margin-top:16px;text-align:center;max-width:320px}
@@ -854,7 +859,12 @@ function attachTilt(host){
   host.addEventListener("pointerleave",reset);host.addEventListener("pointerup",e=>{if(e.pointerType!=="mouse")reset()});host.addEventListener("pointercancel",reset);
 }
 const CARD_BACK=()=>`<div class="cback"><div class="cbimg" style="background-image:url(img/cardback.jpg?v=${IMG_V})"></div><div class="fr"></div></div>`;
-const tiltCard=html=>`<div class="tilt">${html}<div class="shine"></div></div>`;
+const tiltCard=html=>`<div class="tilt"><div class="fl3"><div class="fl3f">${html}<div class="shine"></div></div><div class="fl3b">${CARD_BACK()}</div></div></div>`;
+function attachFlip(host){
+  if(!host)return;let x0=0,y0=0;
+  host.addEventListener("pointerdown",e=>{x0=e.clientX;y0=e.clientY});
+  host.addEventListener("click",e=>{if(Math.hypot(e.clientX-x0,e.clientY-y0)>8)return;const f=host.querySelector(".fl3");if(f){f.classList.toggle("flipped");buzz(8)}});
+}
 function particles(host,color,n=24,spread=170){
   const box=document.createElement("div");box.className="parts";
   for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,d=spread*(.45+Math.random()*.75),el=document.createElement("i");
@@ -983,7 +993,7 @@ function showDetail(id){
   ov.classList.add("on");
   if(c.rar==="S")sb.rpc("limited_stock").then(({data})=>{const o=(data||[]).find(x=>x.card_id===id),el=$("#sstock");if(el&&o){const left=Math.max(0,o.max_copies-o.minted);el.textContent=left?`Édition limitée : ${left} exemplaire${left>1?"s":""} sur ${o.max_copies} encore dans les paquets.`:`Édition limitée : les ${o.max_copies} exemplaires ont tous été tirés.`}});
   if(c.rar==="U")sb.rpc("unique_owners").then(({data})=>{const o=(data||[]).find(x=>x.card_id===id),el=$("#uowner");if(el)el.textContent=o?`Exemplaire unique, possédé par ${o.pseudo}.`:"Exemplaire unique, encore dans les paquets !"});
-  attachTilt(ov.querySelector(".detail"));
+  attachTilt(ov.querySelector(".detail"));attachFlip(ov.querySelector(".detail"));
   $("#close").onclick=closeOv;
   ov.querySelectorAll(".vslot").forEach(el=>el.onclick=()=>showDetail(el.dataset.v));
   const vb=$("#vit");if(vb)vb.onclick=()=>chooseSlotFor(id);
@@ -1082,7 +1092,7 @@ function zoomCard(id,{holo=false,locked=null}={}){
   const c=BY_ID[id];if(!c)return;
   const lk=locked===null?!S.col[id]:locked, z=$("#zoom");
   z.innerHTML=`<div class="detail">${tiltCard(cardHTML(c,{holo,locked:lk}))}</div><div class="dinfo"><h2>${esc(c.name)}</h2><p>${SET_BY[c.set].name} · ${c.role}<br>${RAR[c.rar].name}${S.col[id]?` · tu l'as ×${S.col[id]}`:" · tu ne l'as pas"}</p><button class="btn alt" id="zclose">Fermer</button></div>`;
-  z.classList.add("on");attachTilt(z.querySelector(".detail"));
+  z.classList.add("on");attachTilt(z.querySelector(".detail"));attachFlip(z.querySelector(".detail"));
   $("#zclose").onclick=()=>z.classList.remove("on");
   z.onclick=e=>{if(e.target===z)z.classList.remove("on")};
 }
