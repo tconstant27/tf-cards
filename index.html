@@ -1089,7 +1089,11 @@ async function loadSocial(){
     sb.from("trades").select("id,from_user,to_user,status,created_at,resolved_at,trade_items(owner,card_id,qty)").order("created_at",{ascending:false}).limit(40)
   ]);
   if(fr.error||tr.error)return;
+  const prev=SOCIAL._st||{},first=!SOCIAL._st;
   SOCIAL.friends=fr.data||[];SOCIAL.trades=tr.data||[];
+  SOCIAL._st=Object.fromEntries(SOCIAL.trades.map(t=>[t.id,t.status]));
+  if(!first){const ch=SOCIAL.trades.filter(t=>prev[t.id]==="pending"&&t.status==="accepted");
+    if(ch.length){refresh();const t=ch[0],o=t.from_user===ME?t.to_user:t.from_user;toast(`Échange accepté${SOCIAL.names[o]?" par "+SOCIAL.names[o]:""} : ta collection est à jour`)}}
   const ids=[...new Set(SOCIAL.trades.flatMap(t=>[t.from_user,t.to_user]).filter(x=>x!==ME))];
   SOCIAL.friends.forEach(f=>SOCIAL.names[f.id]=f.pseudo);
   const missing=ids.filter(i=>!SOCIAL.names[i]);
@@ -1258,7 +1262,8 @@ $("#recycleAll").addEventListener("click",async e=>{
 $("#logout").onclick=async()=>{await sb.auth.signOut()};
 document.addEventListener("visibilitychange",()=>{if(!document.hidden&&ME){refresh();loadSocial()}});
 setInterval(renderShop,1000);
-setInterval(()=>{if(ME&&!document.hidden)loadSocial()},30000);
+setInterval(()=>{if(ME&&!document.hidden)loadSocial()},15000);
+document.addEventListener("visibilitychange",()=>{if(ME&&!document.hidden){loadSocial();refresh()}});
 
 window.addEventListener("error",e=>toast("Erreur : "+e.message));
 window.addEventListener("unhandledrejection",e=>toast("Erreur : "+((e.reason&&e.reason.message)||e.reason)));
