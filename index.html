@@ -915,7 +915,7 @@ async function openPack(kind){
   let pack;
   try{pack=kind==="classic"?await rpc("buy_pack",{kind}):await rpc("open_pack",{kind})}catch(e){busy=false;renderShop();return}
   busy=false;
-  pack.sort((a,b)=>rIdx(BY_ID[a.id].rar)-rIdx(BY_ID[b.id].rar));
+  pack.sort((a,b)=>rIdx(BY_ID[a.id].rar)-rIdx(BY_ID[b.id].rar)||(a.holo?1:0)-(b.holo?1:0));
   showPack(kind,pack);
   refresh();
 }
