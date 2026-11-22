@@ -672,7 +672,7 @@ const BAG=`<img class="bag" src="img/bag.png?v=3" alt="">`;
 const bagify=t=>esc(t).replace(/ ?🗑️/g,"&nbsp;"+BAG);
 function toast(m){const t=$("#toast");t.innerHTML=bagify(m);t.classList.add("on");clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove("on"),2600)}
 function fmt(ms){ms=Math.max(0,ms);const h=Math.floor(ms/H),m=Math.floor(ms%H/60000),s=Math.floor(ms%60000/1000);return (h?h+"h ":"")+String(m).padStart(2,"0")+"m "+String(s).padStart(2,"0")+"s"}
-const ERR={"Invalid login credentials":"Pseudo ou mot de passe incorrect","User already registered":"Ce pseudo est déjà pris"};
+const ERR={"Invalid login credentials":"Pseudo ou mot de passe incorrect. Depuis le reset, il faut recréer son compte (onglet « Créer un compte »).","User already registered":"Ce pseudo est déjà pris"};
 async function rpc(name,args){
   const {data,error}=await sb.rpc(name,args||{});
   if(error){toast(ERR[error.message]||error.message);throw error}
@@ -680,7 +680,12 @@ async function rpc(name,args){
 }
 
 /* ---------- AUTH ---------- */
-let authMode="login";
+function forceLogout(){
+  try{Object.keys(localStorage).filter(k=>k.startsWith("sb-")).forEach(k=>localStorage.removeItem(k))}catch(e){}
+  try{sessionStorage.setItem("tf_gone","1")}catch(e){}
+  location.replace(location.pathname);
+}
+let authMode="login",authGone=false;try{if(sessionStorage.getItem("tf_gone")){authGone=true;authMode="signup";sessionStorage.removeItem("tf_gone")}}catch(e){}
 function renderAuth(msg){
   $("#auth").innerHTML=`<div class="authbox">
     <div class="brand" style="justify-content:center;margin-bottom:18px"><div class="logo" style="width:64px;height:64px"><img src="img/logo.png?v=${IMG_V}" alt="Triforce"></div><div><h1>TF CARDS</h1><small>Triforce Esport</small></div></div>
@@ -699,6 +704,7 @@ function renderAuth(msg){
     if(!/^[A-Za-z0-9_.-]{3,16}$/.test(p)){m.textContent="Pseudo invalide (3 à 16 caractères : lettres, chiffres, _ . -)";return}
     if(pw.length<6){m.textContent="Mot de passe : 6 caractères minimum";return}
     const email=p.toLowerCase()+"@"+EMAIL_DOMAIN;
+    const sbt=$("#authForm button[type=submit]");if(sbt.disabled)return;sbt.disabled=true;setTimeout(()=>{if(sbt.isConnected)sbt.disabled=false},4000);
     m.textContent="…";
     if(authMode==="signup"){
       if(pw!==$("#aPass2").value){m.textContent="Les mots de passe ne correspondent pas";return}
@@ -712,7 +718,7 @@ function renderAuth(msg){
   };
 }
 async function onSession(session){
-  if(!session){ME=null;$("#app").style.display="none";$("#auth").style.display="";renderAuth();return}
+  if(!session){ME=null;$("#app").style.display="none";$("#auth").style.display="";renderAuth(authGone?"Depuis le reset, ton ancien compte n'existe plus : recrée-le ici (tu peux reprendre le même pseudo).":"");authGone=false;return}
   if(ME===session.user.id)return;
   ME=session.user.id;
   $("#auth").style.display="none";$("#app").style.display="";
@@ -723,7 +729,7 @@ async function onSession(session){
 async function refresh(){
   loadAch();
   const m=await rpc("get_me");
-  if(!m||!m.id){ME=null;try{await sb.auth.signOut({scope:"local"})}catch(e){}$("#app").style.display="none";$("#auth").style.display="";renderAuth();toast("Ton ancien compte n'existe plus : crée-en un nouveau !");return}
+  if(!m||!m.id){forceLogout();return}
   S.pseudo=m.pseudo;S.avatar_v=m.avatar_v||0;S.created_at=m.created_at;S.shards=m.shards;S.stock=m.stock;S.tick=m.tick;S.next=m.next_ms||H;S.daily_ok=m.daily_ok;
   S.packs=m.packs;S.cards_total=m.cards_total;S.showcase=(m.showcase||[]).concat([null,null,null]).slice(0,3);S.last=m.last_pack||[];
   S.col={};S.holo={};S.got={};
@@ -1278,7 +1284,8 @@ renderRates();
 if(!window.supabase){$("#auth").innerHTML=`<div class="authbox"><p class="note err">Impossible de charger le jeu. Vérifie ta connexion puis recharge la page.</p></div>`}
 else{
   sb=window.supabase.createClient(SB_URL,SB_KEY);
-  sb.auth.getSession().then(({data})=>onSession(data.session));
+  sb.auth.getSession().then(({data})=>onSession(data.session)).catch(()=>forceLogout());
+  setTimeout(()=>{if(!ME&&!$("#auth").innerHTML.trim()){$("#auth").style.display="";renderAuth()}},5000);
   sb.auth.onAuthStateChange((_e,session)=>{setTimeout(()=>onSession(session),0)});
 }
 
