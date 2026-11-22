@@ -960,7 +960,7 @@ function showPack(kind,pack){
     const tOut=uni?2300:1500;
     if(uni){setTimeout(()=>{const f=document.createElement("div");f.className="flash";document.body.appendChild(f);setTimeout(()=>f.remove(),800);
       particles(stage,["#ff3d71","#ffb020","#4cd07d","#3fa7ff","#b46cff","#fff"],70,260)},900)}
-    setTimeout(()=>stage.classList.add("out"),tOut);setTimeout(()=>revealStack(pack),tOut+550)};
+    setTimeout(()=>stage.classList.add("out"),tOut);setTimeout(()=>revealStack(pack,onBack()),tOut+550)};
   stage.addEventListener("pointerdown",e=>{if(done)return;const r=bp.getBoundingClientRect();x0=e.clientX;y0=e.clientY;moved=0;base=rot;
     mode=(e.clientY-r.top)<r.height*.24?"tear":"spin";
     if(mode==="tear"){cancelAnimationFrame(anim);const fx0=(e.clientX-r.left)/r.width,fx=onBack()?1-fx0:fx0;dir=prog>0?dir:(fx<.5?1:-1)}
@@ -980,7 +980,8 @@ function showPack(kind,pack){
     x0=null});
   stage.addEventListener("pointercancel",()=>{if(!done&&mode==="tear"&&prog<.5)animateTo(0,280);x0=null});
 }
-function revealStack(pack){
+function revealStack(pack0,fromBack=false){
+  const pack=fromBack?pack0.slice().reverse():pack0;
   const n=pack.length;let idx=0,isOpen=false;
   ov.innerHTML=`<div class="fxwrap" id="fx"><div class="rays2" id="rays2"></div><div class="burst" id="burst"></div>
     <div class="stack" id="stack">${pack.map((p,i)=>{const c=BY_ID[p.id];
@@ -1001,9 +1002,15 @@ function revealStack(pack){
     if(p.holo)particles(fx,["#ff00c8","#00f0ff","#ffe600"],26,150);
     if("MLSU".includes(r))toast(`${{M:"🔥 MYTHIQUE",L:"🌟 LÉGENDAIRE",S:"✍️ SIGNED",U:"🌈 UNIQUE"}[r]} : ${c.name} !`);
   };
+  if(fromBack){cards.forEach(x=>x.classList.add("open"));isOpen=true;$("#sub").textContent=n>1?"Touche pour la carte suivante":"Touche pour voir ton paquet";setTimeout(()=>effect(BY_ID[pack[0].id],pack[0]),350)}
   stack.addEventListener("click",()=>{
     if(idx>=n)return;
     const el=cards[idx],p=pack[idx],c=BY_ID[p.id];
+    if(fromBack){el.classList.add("out");idx++;
+      cards.forEach((x,i)=>{if(i>=idx)x.style.setProperty("--d",i-idx)});
+      if(idx>=n){setTimeout(()=>summary(pack0),380);return}
+      tiltTop();const q=pack[idx];setTimeout(()=>effect(BY_ID[q.id],q),200);
+      $("#cnt").textContent=`${idx+1} / ${n}`;$("#sub").textContent=idx<n-1?"Touche pour la carte suivante":"Touche pour voir ton paquet";return}
     if(!isOpen){el.classList.add("open");isOpen=true;setTimeout(()=>effect(c,p),330);$("#sub").textContent=idx<n-1?"Touche encore pour la carte suivante":"Touche pour voir ton paquet";return}
     el.classList.add("out");isOpen=false;idx++;
     cards.forEach((x,i)=>{if(i>=idx)x.style.setProperty("--d",i-idx)});
@@ -1011,7 +1018,7 @@ function revealStack(pack){
     tiltTop();
     $("#cnt").textContent=`${idx+1} / ${n}`;$("#sub").textContent="Touche la carte pour la retourner";
   });
-  $("#skip").onclick=()=>summary(pack);
+  $("#skip").onclick=()=>summary(pack0);
 }
 function summary(pack){
   const d=pack.filter(p=>!p.isNew).length, nw=pack.length-d;
