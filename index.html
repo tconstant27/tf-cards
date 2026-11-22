@@ -635,7 +635,7 @@ const TEAM_PHOTOS={};
 const WIDE=new Set(["speciales-les","rosters-valo","rosters-lol","speciales-ratoon","speciales-ga"]);
 const CHAMP_KEY={"Kai'Sa":"Kaisa","Kha'Zix":"Khazix","K'Santé":"KSante"};
 const champUrl=n=>`https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${CHAMP_KEY[n]||n.replace(/[^A-Za-z]/g,"")}_0.jpg`;
-const IMG_V="12";
+const IMG_V="13";
 const roleSvg=(r,cls)=>ROLE_IMG[r]?`<i class="${cls} rimg" style="--m:url(${ROLE_IMG[r]})"></i>`:ROLE_SVG[r]?`<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ROLE_SVG[r]}</svg>`:"";
 const cName=(c,lk)=>c.rar==="U"&&lk?"???":c.name;
 const infoLine=c=>SET_BY[c.set].name+(c.role?" · "+c.role:"");
