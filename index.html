@@ -450,6 +450,7 @@ img.bag{height:1.15em;width:auto;vertical-align:-.22em;display:inline-block}
 .note{color:var(--mut);font-size:12px;margin:4px 0 12px}
 .note.err{color:#ff8aa5;min-height:1em}
 .addrow{display:flex;gap:8px}.addrow input{margin:0}
+.sugg{margin-top:6px}.srow{display:flex;align-items:center;gap:10px;padding:7px 4px;border-bottom:1px solid #ffffff10;cursor:pointer}.srow:last-child{border-bottom:none}.srow small{color:var(--mut);font-size:11px}
 .frow{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px 12px;margin-bottom:8px}
 .frow.click{cursor:pointer}.frow b{display:block}.frow small{color:var(--mut);font-size:12px}
 .frow .chev{font-size:24px;color:var(--mut)}
@@ -518,8 +519,8 @@ nav.tabs button{position:relative}
   </section>
   <section class="view" id="v-friends">
     <button class="btn lbbtn" id="lbBtn" type="button">🏆 Classement global</button>
-    <form id="addForm" class="panel" style="margin-top:0"><h3 class="disp">Ajouter un ami</h3><p>Entre le pseudo exact de ton pote.</p>
-      <div class="addrow"><input id="addInput" placeholder="Pseudo" autocapitalize="off" maxlength="16"><button class="btn" type="submit">Ajouter</button></div></form>
+    <form id="addForm" class="panel" style="margin-top:0"><h3 class="disp">Ajouter un ami</h3><p>Commence à taper son pseudo, puis choisis-le dans la liste.</p>
+      <div class="addrow"><input id="addInput" placeholder="Pseudo" autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false" maxlength="16"><button class="btn" type="submit">Ajouter</button></div><div id="sugg" class="sugg"></div></form>
     <div id="friendList"></div>
   </section>
   <section class="view" id="v-prof">
@@ -1134,11 +1135,23 @@ $("#friendList").addEventListener("click",e=>{
   else if(ds.can)act(()=>rpc("trade_cancel",{p_trade:+ds.can}));
   else if(d.classList.contains("tc"))zoomCard(d.dataset.id);
 });
+let ALLP=null,ALLP_T=0;
+async function loadAllP(){if(ALLP&&Date.now()-ALLP_T<60000)return ALLP;const {data}=await sb.from("profiles").select("id,pseudo,avatar_v");ALLP=data||[];ALLP_T=Date.now();return ALLP}
+async function renderSugg(){
+  const q=norm($("#addInput").value.trim()),box=$("#sugg");if(!q){box.innerHTML="";return}
+  const all=await loadAllP();if(norm($("#addInput").value.trim())!==q)return;
+  const known=new Set((SOCIAL.friends||[]).map(f=>f.id));
+  const hits=all.filter(u=>u.id!==ME&&norm(u.pseudo).startsWith(q)).sort((a,b)=>a.pseudo.localeCompare(b.pseudo)).slice(0,6);
+  box.innerHTML=hits.map(u=>`<div class="srow" data-p="${esc(u.pseudo)}">${avatarHTML(u.id,u.pseudo,u.avatar_v,"s")}<b>${esc(u.pseudo)}</b><span style="flex:1"></span>${known.has(u.id)?`<small>déjà ami / en attente</small>`:`<button type="button" class="btn sm" data-add="${esc(u.pseudo)}">Ajouter</button>`}</div>`).join("")||`<p class="note" style="margin:8px 0 0">Aucun joueur ne commence par « ${esc($("#addInput").value.trim())} ».</p>`;
+}
+$("#addInput").addEventListener("input",renderSugg);
+$("#sugg").addEventListener("click",e=>{const a=e.target.closest("[data-add]");if(a){$("#addInput").value=a.dataset.add;$("#addForm").requestSubmit();return}
+  const r=e.target.closest(".srow");if(r){$("#addInput").value=r.dataset.p;renderSugg()}});
 $("#addForm").onsubmit=async e=>{
   e.preventDefault();const i=$("#addInput"),v=i.value.trim();if(!v)return;
   try{const r=await rpc("friend_request",{p_pseudo:v});
     toast({sent:"Demande envoyée à "+v,accepted:"Vous êtes maintenant amis !",already:"Déjà ami ou demande en cours"}[r]||r);
-    i.value="";loadSocial()}catch(e){}
+    i.value="";$("#sugg").innerHTML="";loadSocial()}catch(e){}
 };
 function zoomCard(id,{holo=false,locked=null}={}){
   const c=BY_ID[id];if(!c)return;
