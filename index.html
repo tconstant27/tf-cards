@@ -723,6 +723,7 @@ async function onSession(session){
 async function refresh(){
   loadAch();
   const m=await rpc("get_me");
+  if(!m||!m.id){ME=null;try{await sb.auth.signOut({scope:"local"})}catch(e){}$("#app").style.display="none";$("#auth").style.display="";renderAuth();toast("Ton ancien compte n'existe plus : crée-en un nouveau !");return}
   S.pseudo=m.pseudo;S.avatar_v=m.avatar_v||0;S.created_at=m.created_at;S.shards=m.shards;S.stock=m.stock;S.tick=m.tick;S.next=m.next_ms||H;S.daily_ok=m.daily_ok;
   S.packs=m.packs;S.cards_total=m.cards_total;S.showcase=(m.showcase||[]).concat([null,null,null]).slice(0,3);S.last=m.last_pack||[];
   S.col={};S.holo={};S.got={};
