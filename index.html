@@ -395,7 +395,12 @@ nav.tabs button.on{color:var(--gold)}
 .shine{position:absolute;inset:0;border-radius:12px;pointer-events:none;z-index:4;opacity:var(--so,0);transition:opacity .3s;
   background:radial-gradient(circle at var(--mx,50%) var(--my,30%),#ffffffaa 0,#ffffff22 25%,transparent 55%);mix-blend-mode:soft-light}
 .detail{touch-action:none;cursor:pointer}
-.lbbtn{width:100%;margin:0 0 12px}
+.lbrowbtn{display:flex;gap:8px;margin:0 0 12px}.lbbtn{flex:1;margin:0}
+.hrow{display:flex;gap:12px;align-items:center;padding:10px 4px;border-bottom:1px solid #ffffff10}
+.hrow .hc{width:84px;flex:none}.hinfo{flex:1;min-width:0}.hinfo b{display:block}.hinfo small{color:var(--mut);font-size:11.5px;display:block;margin-top:2px}
+.hw{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}.hw i{font-style:normal;font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:7px;background:#ffffff14}.hw i.have{background:#4cd07d33;color:#8ff0b0}
+.hact{display:flex;flex-direction:column;gap:6px;flex:none}
+#hubSearch{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--txt);font:500 15px Inter;padding:10px 12px;border-radius:12px;margin:0 0 12px}
 .lbbox{width:min(440px,94vw);max-height:86vh;display:flex;flex-direction:column}
 .lbbox .filters{justify-content:center;margin:6px 0 10px}
 #lbList{overflow:auto;flex:1;min-height:0;text-align:left}
@@ -518,7 +523,7 @@ nav.tabs button{position:relative}
     </div>
   </section>
   <section class="view" id="v-friends">
-    <button class="btn lbbtn" id="lbBtn" type="button">🏆 Classement global</button>
+    <div class="lbrowbtn"><button class="btn lbbtn" id="lbBtn" type="button">🏆 Classement</button><button class="btn lbbtn" id="hubBtn" type="button">🔄 Hub d'échange</button></div>
     <form id="addForm" class="panel" style="margin-top:0"><h3 class="disp">Ajouter un ami</h3><p>Commence à taper son pseudo, puis choisis-le dans la liste.</p>
       <div class="addrow"><input id="addInput" placeholder="Pseudo" autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false" maxlength="16"><button class="btn" type="submit">Ajouter</button></div><div id="sugg" class="sugg"></div></form>
     <div id="friendList"></div>
@@ -895,6 +900,80 @@ async function showLB(){
   try{LB=await rpc("leaderboard")||[];renderLB()}catch(e){$("#lbList").innerHTML=`<p class="note">Classement indisponible.</p>`}
 }
 $("#lbBtn").onclick=showLB;
+/* ---------- HUB D'ÉCHANGE ---------- */
+let HUB=[],hubTab="all",hubMiss=false;
+const rarTag=c=>`<span ${rcls(c.rar)} style="font-weight:700">${RAR[c.rar].name}</span>`;
+async function showHub(tab){
+  if(tab)hubTab=tab;
+  ov.innerHTML=`<div class="fview"><div class="phead"><div style="flex:1"><h2>🔄 Hub d'échange</h2><small>Les cartes que les joueurs proposent à l'échange. Fais une offre, le joueur l'accepte ou la refuse dans ses échanges.</small></div><button class="btn alt sm" id="close">✕</button></div>
+    <div class="ovact" style="justify-content:center;margin:12px 0"><button class="btn" id="hubNew">＋ Mettre une carte dans le hub</button></div>
+    <div class="filters"><button data-h="all" class="${hubTab==="all"?"on":""}">Annonces</button><button data-h="mine" class="${hubTab==="mine"?"on":""}">Mes annonces</button>${hubTab==="all"?`<button id="hubMiss" class="${hubMiss?"on":""}">Qui me manquent</button>`:""}</div>
+    <div id="hubList"><p class="note">Chargement…</p></div></div>`;
+  ov.classList.add("on");ov.scrollTop=0;
+  $("#close").onclick=closeOv;$("#hubNew").onclick=()=>hubCreate();
+  ov.querySelectorAll("[data-h]").forEach(b=>b.onclick=()=>showHub(b.dataset.h));
+  const hm=$("#hubMiss");if(hm)hm.onclick=()=>{hubMiss=!hubMiss;showHub()};
+  try{HUB=await rpc("hub_list")||[]}catch(e){$("#hubList").innerHTML=`<p class="note">Hub indisponible.</p>`;return}
+  let L=HUB.filter(l=>BY_ID[l.card_id]&&(hubTab==="mine"?l.user_id===ME:l.user_id!==ME));
+  if(hubTab==="all"&&hubMiss)L=L.filter(l=>!S.col[l.card_id]);
+  $("#hubList").innerHTML=L.map(l=>{const c=BY_ID[l.card_id];
+    const wants=(l.wants||[]).filter(w=>BY_ID[w]);
+    return `<div class="hrow"><div class="slot hc" data-z="${c.id}">${cardHTML(c,{locked:false})}</div>
+      <div class="hinfo"><b>${esc(c.name)}</b><small>${esc(SET_BY[c.set].short||SET_BY[c.set].name)} · ${rarTag(c)}${S.col[c.id]?"":" · <span style='color:#8ff0b0'>te manque</span>"}</small>
+      <small>${hubTab==="mine"?"Ton annonce":"Proposée par <b style='display:inline'>"+esc(l.pseudo)+"</b>"}</small>
+      <div class="hw">${wants.length?wants.map(w=>`<i class="${S.col[w]&&hubTab!=="mine"?"have":""}">${esc(cName(BY_ID[w],!S.col[w]))} ${SET_BY[BY_ID[w].set].short?"· "+esc(SET_BY[BY_ID[w].set].short):""}</i>`).join(""):`<i>Ouvert à toutes les offres</i>`}</div></div>
+      <div class="hact">${hubTab==="mine"?`<button class="btn alt sm" data-close="${l.id}">Retirer</button>`:l.my_offer?`<small style="color:var(--mut)">Offre envoyée</small>`:`<button class="btn sm" data-offer="${l.id}">Faire une offre</button>`}</div></div>`}).join("")
+    ||`<p class="note">${hubTab==="mine"?"Tu n'as aucune carte dans le hub.":"Aucune annonce pour l'instant."}</p>`;
+  ov.querySelectorAll("[data-z]").forEach(el=>el.onclick=()=>zoomCard(el.dataset.z,{locked:false}));
+  ov.querySelectorAll("[data-close]").forEach(b=>b.onclick=async()=>{b.disabled=true;try{await rpc("listing_close",{p_id:+b.dataset.close});toast("Annonce retirée");showHub()}catch(e){b.disabled=false}});
+  ov.querySelectorAll("[data-offer]").forEach(b=>b.onclick=()=>hubOffer(HUB.find(x=>x.id===+b.dataset.offer)));
+}
+function cardPicker({title,sub,list,multi,max=8,initial={},qtyOf=null,onDone,doneLabel,search=false,filters=null,lockUnowned=false}){
+  const sel={...initial};let q="",flt=filters?filters[0][0]:null;
+  const draw=()=>{
+    let L=list(flt);if(q){const w=norm(q).split(/\s+/).filter(Boolean);L=L.filter(c=>{const h=norm([cName(c,lockUnowned&&!S.col[c.id]),c.role,SET_BY[c.set].name,SET_BY[c.set].short].join(" "));return w.every(x=>h.includes(x))})}
+    const n=Object.values(sel).reduce((a,b)=>a+b,0);
+    ov.innerHTML=`<div class="fview"><div class="phead"><div style="flex:1"><h2>${title}</h2><small>${sub}</small></div><button class="btn alt sm" id="close">✕</button></div>
+      ${filters?`<div class="filters" style="margin-top:12px">${filters.map(([k,l])=>`<button data-pf="${k}" class="${flt===k?"on":""}">${l}</button>`).join("")}</div>`:""}
+      ${search?`<input id="hubSearch" placeholder="Rechercher une carte…" value="${esc(q)}" autocomplete="off">`:""}
+      <div class="grid">${L.map(c=>`<div class="slot tb${sel[c.id]?" sel":""}" data-id="${c.id}">${cardHTML(c,{locked:lockUnowned&&!S.col[c.id]})}${qtyOf?`<span class="badge cnt">${sel[c.id]?sel[c.id]+"/":"×"}${qtyOf(c.id)}</span>`:""}${sel[c.id]?`<span class="badge selb">✓</span>`:""}</div>`).join("")||`<p class="note">Aucune carte ici.</p>`}</div>
+      <div class="tradebar"><span>${multi?`<b>${n}</b> sélectionnée${n>1?"s":""}`:""}</span><button class="btn" id="pdone" ${multi&&!n&&!doneLabel.optional?"disabled":""}>${doneLabel.text}</button></div></div>`;
+    $("#close").onclick=closeOv;
+    ov.querySelectorAll("[data-pf]").forEach(b=>b.onclick=()=>{flt=b.dataset.pf;draw()});
+    const si=$("#hubSearch");if(si){si.oninput=()=>{q=si.value;const y=ov.scrollTop;draw();ov.scrollTop=y;const s2=$("#hubSearch");s2.focus();s2.setSelectionRange(q.length,q.length)}}
+    ov.querySelectorAll(".tb").forEach(el=>el.onclick=()=>{const id=el.dataset.id;
+      if(!multi){onDone(id);return}
+      const lim=qtyOf?qtyOf(id):1,v=(sel[id]||0)+1;
+      if(v>lim)delete sel[id];else{if(!sel[id]&&Object.keys(sel).length>=max){toast(`Maximum ${max} cartes`);return}sel[id]=v}
+      const y=ov.scrollTop;draw();ov.scrollTop=y});
+    $("#pdone").onclick=e=>{e.target.disabled=true;onDone(sel)};
+  };
+  ov.classList.add("on");draw();ov.scrollTop=0;
+}
+function hubCreate(){
+  const listed=new Set(HUB.filter(l=>l.user_id===ME).map(l=>l.card_id));
+  cardPicker({title:"Quelle carte proposer ?",sub:"Choisis une de tes cartes à mettre dans le hub.",multi:false,
+    filters:[["DUP","Mes doublons"],["ALL","Toutes mes cartes"]],
+    list:f=>CARDS.filter(c=>S.col[c.id]&&!listed.has(c.id)&&(f==="ALL"||S.col[c.id]>1)).sort(sortR),
+    doneLabel:{text:"Annuler",optional:true},
+    onDone:id=>{if(typeof id!=="string"){showHub();return}
+      const c=BY_ID[id];
+      cardPicker({title:`Contre quoi ?`,sub:`Choisis jusqu'à 8 cartes que tu voudrais en échange de ${esc(c.name)}, ou publie sans rien choisir pour accepter toutes les offres.`,multi:true,max:8,search:true,lockUnowned:true,
+        filters:[["MISS","Qui me manquent"],["ALL","Toutes"]],
+        list:f=>CARDS.filter(x=>x.id!==id&&(f==="ALL"||!S.col[x.id])).sort(sortR),
+        doneLabel:{text:"Publier l'annonce",optional:true},
+        onDone:async sel=>{try{await rpc("listing_create",{p_card:id,p_wants:Object.keys(sel)});toast("Ta carte est dans le hub !");showHub("mine")}catch(e){showHub("mine")}}})}});
+}
+function hubOffer(l){
+  if(!l)return;const c=BY_ID[l.card_id],wants=(l.wants||[]).filter(w=>S.col[w]);
+  const filters=wants.length?[["WANT","Ce qu'il cherche"],["DUP","Mes doublons"],["ALL","Toutes mes cartes"]]:[["DUP","Mes doublons"],["ALL","Toutes mes cartes"]];
+  cardPicker({title:`Offre pour ${esc(c.name)}`,sub:`Choisis ce que tu donnes à ${esc(l.pseudo)} en échange (retouche une carte pour en mettre plusieurs exemplaires).`,multi:true,max:8,
+    filters,qtyOf:id=>S.col[id]||0,
+    list:f=>CARDS.filter(x=>S.col[x.id]&&(f==="ALL"||(f==="WANT"?wants.includes(x.id):S.col[x.id]>1))).sort(sortR),
+    doneLabel:{text:"Envoyer l'offre"},
+    onDone:async sel=>{try{await rpc("listing_offer",{p_id:l.id,p_give:Object.entries(sel).map(([id,qty])=>({id,qty}))});toast("Offre envoyée à "+l.pseudo);SOCIAL.names[l.user_id]=l.pseudo;loadSocial();showHub("all")}catch(e){showHub("all")}}});
+}
+$("#hubBtn").onclick=()=>showHub("all");
 const buzz=ms=>{try{navigator.vibrate&&navigator.vibrate(ms)}catch(e){}};
 function attachTilt(host){
   const t=host&&host.querySelector(".tilt");if(!t)return;
