@@ -576,7 +576,7 @@ const SETS = [
   {id:"rosters",name:"Rosters LES",short:"LES ROSTERS",game:"TEAM",rar:"E",t1:"#24406a",t2:"#070d1a",p:["LoL LES","Valo LES"],keys:["lol","valo"],roles:["Roster League of Legends","Roster Valorant"]},
   {id:"legends",name:"Légendes du club",short:"LÉGENDE",game:"LEG",rar:"M",t1:"#6a1030",t2:"#14030a",p:["KGB","AON","Morro"],roles:["Légende du club","Légende du club","Légende du club"]},
   {id:"speciales",name:"Spéciales",short:"SPÉCIALE",game:"LEG",rar:"M",t1:"#5a1a40",t2:"#12040c",p:["LES","GA","Ratoon"],keys:["les","ga","ratoon"],roles:["Lyon Esport","Gamers Assembly","Mascotte"]},
-  {id:"uniques",noset:true,name:"Cartes uniques",short:"UNIQUE",game:"LEG",rar:"U",raw:true,t1:"#20203a",t2:"#05050f",p:["Xayah & Rakan","Nono & Toto","CEOs ALT"],keys:["xayahrakan","nonototo","ceos"],roles:["Toto & Momo","Duo","Momo, Vincc & toto"]},
+  {id:"uniques",noset:true,name:"Cartes uniques",short:"UNIQUE",game:"LEG",rar:"U",raw:true,t1:"#20203a",t2:"#05050f",p:["Xayah & Rakan","Nono & Toto","CEOs ALT"],keys:["xayahrakan","nonototo","ceos"],roles:["","",""]},
   {id:"signed",noset:true,name:"Cartes signées",short:"SIGNED",game:"LEG",rar:"S",raw:true,t1:"#1c1c28",t2:"#050508",p:["toto","Vincc","Momo","AON","KGB","Morro"],keys:["toto","vincc","momo","aon","kgb","morro"],roles:["CEO","CEO","CEO","Légende du club","Légende du club","Légende du club"]},
   {id:"bsk",name:"BSK Summer Clash · Winner",short:"BSK SUMMER",game:"SSBU",rar:"E",win:true,t1:"#d4a017",t2:"#2a1a00",p:["MonnaieBison30"]},
 ];
@@ -623,12 +623,14 @@ const CHAMP_KEY={"Kai'Sa":"Kaisa","Kha'Zix":"Khazix","K'Santé":"KSante"};
 const champUrl=n=>`https://ddragon.leagueoflegends.com/cdn/img/champion/loading/${CHAMP_KEY[n]||n.replace(/[^A-Za-z]/g,"")}_0.jpg`;
 const IMG_V="12";
 const roleSvg=(r,cls)=>ROLE_IMG[r]?`<i class="${cls} rimg" style="--m:url(${ROLE_IMG[r]})"></i>`:ROLE_SVG[r]?`<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${ROLE_SVG[r]}</svg>`:"";
+const cName=(c,lk)=>c.rar==="U"&&lk?"???":c.name;
+const infoLine=c=>SET_BY[c.set].name+(c.role?" · "+c.role:"");
 function cardHTML(c,{holo=false,locked=false}={}){
-  const t=SET_BY[c.set];
+  const t=SET_BY[c.set],NM=cName(c,locked);
   return `<div class="card ${c.rar}${t.raw?" raw":""}${holo?" holo":""}${locked?" locked":""}${t.win?" win":""}" style="--t1:${t.t1};--t2:${t.t2}">
     <div class="hdr"><div class="rl">${RAR[c.rar].name}</div></div>
     ${TEAM_PHOTOS[c.id]?`<div class="ph tph">${TEAM_PHOTOS[c.id].map(f=>`<img src="img/${f}.jpg?v=${IMG_V}" alt="" loading="lazy">`).join("")}</div>`:WIDE.has(c.id)?`<div class="ph phw"><img class="bgb" src="img/${PHOTOS[c.id]}.jpg?v=${IMG_V}" alt="" loading="lazy"><img class="fg" src="img/${PHOTOS[c.id]}.jpg?v=${IMG_V}" alt="" loading="lazy"></div>`:PHOTOS[c.id]?`<img class="ph${PHOTOS[c.id].endsWith(".png")?" cut":""}" src="img/${PHOTOS[c.id].includes(".")?PHOTOS[c.id]:PHOTOS[c.id]+".jpg"}?v=${IMG_V}" alt="" loading="lazy">`:`${c.champ?`<img class="ph champbg" src="${champUrl(c.champ)}" alt="" loading="lazy" onerror="this.remove()">`:roleSvg(c.role,"rbg")}<div class="art${c.champ?" noart":""}"><em>${locked?"🔒":(ROLE_SVG[c.role]&&!SET_BY[c.set].win?roleSvg(c.role,"ric"):c.icon)}</em></div>`}
-    ${c.rar==="S"&&!locked?`<i class="sig" style="--sm:url(img/sig/${c.id.slice(7)}-r.png?v=${IMG_V})"></i>`:""}<div class="foot">${t.noset?"":`<div class="ed">${t.name}</div>`}<div class="nm" style="${c.name.length>9?`font-size:${Math.max(7,108/c.name.length)}cqw`:""}">${c.name}</div><div class="role">${(!locked&&PHOTOS[c.id]&&ROLE_SVG[c.role]?roleSvg(c.role,"rin")+" ":"")+c.role}</div>
+    ${c.rar==="S"&&!locked?`<i class="sig" style="--sm:url(img/sig/${c.id.slice(7)}-r.png?v=${IMG_V})"></i>`:""}<div class="foot">${t.noset?"":`<div class="ed">${t.name}</div>`}<div class="nm" style="${NM.length>9?`font-size:${Math.max(7,108/NM.length)}cqw`:""}">${NM}</div><div class="role">${(!locked&&PHOTOS[c.id]&&ROLE_SVG[c.role]?roleSvg(c.role,"rin")+" ":"")+c.role}</div>
       <div class="num"><span>N° ${c.num}/${c.size}</span><span>${holo?"✨ HOLO":"TF CARDS"}</span></div></div>
   </div>`;
 }
@@ -786,7 +788,7 @@ function renderCol(){
     $("#colBar").style.width=(owned/CARDS.length*100)+"%";
     $("#filters").style.display="none";
     const words=norm(colQ).split(/\s+/).filter(Boolean);
-    const hits=CARDS.filter(c=>{const hay=norm([c.name,c.role,SET_BY[c.set].name,SET_BY[c.set].short,RAR[c.rar].name].join(" "));return words.every(w=>hay.includes(w))})
+    const hits=CARDS.filter(c=>{const hay=norm([cName(c,!S.col[c.id]),c.role,SET_BY[c.set].name,SET_BY[c.set].short,RAR[c.rar].name].join(" "));return words.every(w=>hay.includes(w))})
       .sort((a,b)=>rIdx(a.rar)-rIdx(b.rar)||a.name.localeCompare(b.name));
     const own=hits.filter(c=>S.col[c.id]).length;
     $("#grid").innerHTML=hits.length?`<div class="sethead"><div><b>${hits.length} carte${hits.length>1?"s":""}</b></div><span>${own}/${hits.length} possédée${own>1?"s":""}</span></div><div class="grid">${hits.map(c=>slotHTML(c)).join("")}</div>`:`<p style="color:var(--mut)">Aucune carte ne correspond à « ${esc(colQ)} ».</p>`;
@@ -982,8 +984,8 @@ function showDetail(id){
   const c=BY_ID[id],n=S.col[id]||0,cost=RAR[c.rar].craft,t=SET_BY[c.set];
   const vers=CARDS.filter(x=>x.player===c.player);
   ov.innerHTML=`<div class="detail">${tiltCard(cardHTML(c,{holo:!!S.holo[id],locked:!n}))}</div>
-    <div class="dinfo"><h2>${esc(c.name)}</h2>
-    <p>${t.name} · ${c.role}<br>${RAR[c.rar].name}${n?` · possédée ×${n}`:""}${S.holo[id]?" · ✨ holo":""}</p>${c.rar==="S"?`<p class="note" id="sstock">Édition limitée : 3 exemplaires seulement.</p>`:""}
+    <div class="dinfo"><h2>${esc(cName(c,!n))}</h2>
+    <p>${infoLine(c)}<br>${RAR[c.rar].name}${n?` · possédée ×${n}`:""}${S.holo[id]?" · ✨ holo":""}</p>${c.rar==="S"?`<p class="note" id="sstock">Édition limitée : 3 exemplaires seulement.</p>`:""}
     ${n?`<button class="btn" id="vit">${S.showcase.includes(id)?"★ En vitrine":"Mettre en vitrine"}</button> ${n>1?`<button class="btn alt" id="recy">Recycler 1 doublon (+${RAR[c.rar].dup} 🗑️)</button>`:""}`
       :c.rar==="U"?`<p class="note" id="uowner">Exemplaire unique : une seule personne peut l'avoir.</p>`:`<p class="note">Pas encore obtenue : ouvre des paquets ou échange-la avec un ami.</p>`}
     <button class="btn alt" id="close">Fermer</button>
@@ -1091,7 +1093,7 @@ $("#addForm").onsubmit=async e=>{
 function zoomCard(id,{holo=false,locked=null}={}){
   const c=BY_ID[id];if(!c)return;
   const lk=locked===null?!S.col[id]:locked, z=$("#zoom");
-  z.innerHTML=`<div class="detail">${tiltCard(cardHTML(c,{holo,locked:lk}))}</div><div class="dinfo"><h2>${esc(c.name)}</h2><p>${SET_BY[c.set].name} · ${c.role}<br>${RAR[c.rar].name}${S.col[id]?` · tu l'as ×${S.col[id]}`:" · tu ne l'as pas"}</p><button class="btn alt" id="zclose">Fermer</button></div>`;
+  z.innerHTML=`<div class="detail">${tiltCard(cardHTML(c,{holo,locked:lk}))}</div><div class="dinfo"><h2>${esc(cName(c,lk))}</h2><p>${infoLine(c)}<br>${RAR[c.rar].name}${S.col[id]?` · tu l'as ×${S.col[id]}`:" · tu ne l'as pas"}</p><button class="btn alt" id="zclose">Fermer</button></div>`;
   z.classList.add("on");attachTilt(z.querySelector(".detail"));attachFlip(z.querySelector(".detail"));
   $("#zclose").onclick=()=>z.classList.remove("on");
   z.onclick=e=>{if(e.target===z)z.classList.remove("on")};
@@ -1099,7 +1101,7 @@ function zoomCard(id,{holo=false,locked=null}={}){
 function showPreview(id){
   const c=BY_ID[id];
   const own=!!S.col[id];
-  ov.innerHTML=`<div class="detail">${cardHTML(c,{locked:!own})}</div><div class="dinfo"><h2>${esc(c.name)}</h2><p>${SET_BY[c.set].name} · ${c.role}<br>${RAR[c.rar].name}${S.col[id]?` · tu l'as ×${S.col[id]}`:" · tu ne l'as pas"}</p><button class="btn alt" id="close">Fermer</button></div>`;
+  ov.innerHTML=`<div class="detail">${cardHTML(c,{locked:!own})}</div><div class="dinfo"><h2>${esc(cName(c,!S.col[id]))}</h2><p>${infoLine(c)}<br>${RAR[c.rar].name}${S.col[id]?` · tu l'as ×${S.col[id]}`:" · tu ne l'as pas"}</p><button class="btn alt" id="close">Fermer</button></div>`;
   ov.classList.add("on");$("#close").onclick=closeOv;
 }
 
