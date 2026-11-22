@@ -407,6 +407,8 @@ nav.tabs button.on{color:var(--gold)}
 .shine{position:absolute;inset:0;border-radius:12px;pointer-events:none;z-index:4;opacity:var(--so,0);transition:opacity .3s;
   background:radial-gradient(circle at var(--mx,50%) var(--my,30%),#ffffffaa 0,#ffffff22 25%,transparent 55%);mix-blend-mode:soft-light}
 .detail{touch-action:none;cursor:pointer}
+.frdet>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;user-select:none}.frdet>summary::-webkit-details-marker{display:none}
+.frchev{margin-left:auto;transition:transform .2s;font-size:16px}.frdet:not([open]) .frchev{transform:rotate(-90deg)}
 .lbrowbtn{display:flex;gap:8px;margin:0 0 12px}.lbbtn{flex:1;margin:0}
 .hrow{display:flex;gap:12px;align-items:center;padding:10px 4px;border-bottom:1px solid #ffffff10}
 .hrow .hc{width:84px;flex:none}.hinfo{flex:1;min-width:0}.hinfo b{display:block}.hinfo small{color:var(--mut);font-size:11.5px;display:block;margin-top:2px}
@@ -1217,6 +1219,7 @@ function tradeHTML(t){
       :`<div class="ovact" style="margin-top:8px"><button class="btn alt sm" data-can="${t.id}">Annuler</button></div>`):""}
   </div>`;
 }
+let frOpen=false;
 function renderFriends(){
   const F=SOCIAL.friends, T=SOCIAL.trades;
   const inReq=F.filter(f=>f.status==="pending"&&f.incoming), outReq=F.filter(f=>f.status==="pending"&&!f.incoming), friends=F.filter(f=>f.status==="accepted");
@@ -1226,13 +1229,15 @@ function renderFriends(){
   let h="";
   if(inReq.length)h+=`<div class="sect">Demandes d'ami reçues</div>${inReq.map(f=>`<div class="frow">${avatarHTML(f.id,f.pseudo,f.avatar_v,"s")}<b>${esc(f.pseudo)}</b><span style="flex:1"></span><button class="btn sm" data-fa="${f.id}">Accepter</button><button class="btn alt sm" data-fd="${f.id}">✕</button></div>`).join("")}`;
   if(inT.length)h+=`<div class="sect">Échanges reçus</div>${inT.map(tradeHTML).join("")}`;
-  h+=`<div class="sect">Mes amis (${friends.length})</div>`;
+  if(outT.length)h+=`<div class="sect">Échanges envoyés</div>${outT.map(tradeHTML).join("")}`;
+  h+=`<details class="frdet" id="frDet"${frOpen?" open":""}><summary class="sect">Mes amis (${friends.length})<span class="frchev">▾</span></summary>`;
   h+=friends.length?friends.map(f=>`<div class="frow click" data-fp="${f.id}">${avatarHTML(f.id,f.pseudo,f.avatar_v,"s")}<div style="flex:1;min-width:0"><b>${esc(f.pseudo)}</b><small>${f.uniques}/${CARDS.length} cartes</small></div><span class="chev">›</span></div>`).join("")
     :`<p class="note">Ajoute tes potes avec leur pseudo pour voir leur collection et échanger des cartes.</p>`;
-  if(outT.length)h+=`<div class="sect">Échanges envoyés</div>${outT.map(tradeHTML).join("")}`;
+  h+=`</details>`;
   if(outReq.length)h+=`<div class="sect">Demandes envoyées</div>${outReq.map(f=>`<div class="frow">${avatarHTML(f.id,f.pseudo,f.avatar_v,"s")}<b>${esc(f.pseudo)}</b><span style="flex:1"></span><small>en attente</small><button class="btn alt sm" data-fr="${f.id}">Annuler</button></div>`).join("")}`;
   if(hist.length)h+=`<div class="sect">Historique des échanges</div>${hist.map(tradeHTML).join("")}`;
   $("#friendList").innerHTML=h;
+  const d=$("#frDet");if(d)d.addEventListener("toggle",()=>{frOpen=d.open});
 }
 async function act(fn){try{await fn();await Promise.all([loadSocial(),refresh()])}catch(e){}}
 $("#friendList").addEventListener("click",e=>{
