@@ -279,6 +279,8 @@ nav.tabs button.on{color:var(--gold)}
 .ach.done{opacity:.55}.ach.ready{border-color:var(--gold);box-shadow:0 0 14px #f2c14e33}
 .ach .ai{flex:1;min-width:0}.ach b{display:block;font-size:15px}.ach small{color:var(--mut);font-size:12px}
 .ach .bar{height:6px;margin-top:6px}.ach .rw{font:700 15px Rajdhani;color:#7de3ff;white-space:nowrap}
+.search{margin:4px 0 10px}.search input{width:100%;background:var(--panel);border:1px solid var(--line);color:var(--txt);font:500 15px Inter;padding:11px 14px;border-radius:12px}
+.search input:focus{outline:none;border-color:var(--gold)}
 .sethead{display:flex;justify-content:space-between;align-items:flex-end;margin:22px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line)}
 .sethead b{font:700 18px Rajdhani;display:block}
 .sethead div span{font-size:12px}
@@ -446,6 +448,7 @@ nav.tabs button{position:relative}
   </section>
   <section class="view" id="v-col">
     <div class="colhead"><div class="prog"><div class="disp" style="font-size:20px" id="colTxt"></div><div class="bar"><i id="colBar"></i></div></div></div>
+    <div class="search"><input id="colSearch" type="search" placeholder="🔍 Rechercher un joueur, une édition, un poste…" autocomplete="off"></div>
     <div class="filters" id="filters"></div>
     <div id="grid"></div>
   </section>
@@ -718,8 +721,22 @@ function renderLast(){
 /* ---------- COLLECTION ---------- */
 let filter="SETS";
 const slotHTML=(c,col=S.col,holo=S.holo)=>{const n=col[c.id]||0;return `<div class="slot" data-id="${c.id}">${cardHTML(c,{holo:!!holo[c.id],locked:!n})}${n>1?`<span class="badge cnt">×${n}</span>`:""}${holo[c.id]?`<span class="badge hol">HOLO</span>`:""}</div>`};
+const norm=t=>String(t||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+let colQ="";
 function renderCol(){
   const owned=CARDS.filter(c=>S.col[c.id]).length;
+  if(colQ){
+    $("#colTxt").textContent=`${owned} / ${CARDS.length} cartes · ${Object.keys(S.holo).length} holo`;
+    $("#colBar").style.width=(owned/CARDS.length*100)+"%";
+    $("#filters").style.display="none";
+    const words=norm(colQ).split(/\s+/).filter(Boolean);
+    const hits=CARDS.filter(c=>{const hay=norm([c.name,c.role,SET_BY[c.set].name,SET_BY[c.set].short,RAR[c.rar].name].join(" "));return words.every(w=>hay.includes(w))})
+      .sort((a,b)=>rIdx(a.rar)-rIdx(b.rar)||a.name.localeCompare(b.name));
+    const own=hits.filter(c=>S.col[c.id]).length;
+    $("#grid").innerHTML=hits.length?`<div class="sethead"><div><b>${hits.length} carte${hits.length>1?"s":""}</b></div><span>${own}/${hits.length} possédée${own>1?"s":""}</span></div><div class="grid">${hits.map(c=>slotHTML(c)).join("")}</div>`:`<p style="color:var(--mut)">Aucune carte ne correspond à « ${esc(colQ)} ».</p>`;
+    return;
+  }
+  $("#filters").style.display="";
   $("#colTxt").textContent=`${owned} / ${CARDS.length} cartes · ${Object.keys(S.holo).length} holo`;
   $("#colBar").style.width=(owned/CARDS.length*100)+"%";
   const fl=[["SETS","Par édition"],["PLAYERS","Par joueur"],["OWN","Possédées"],["DUP","Doublons"],...SETS_BY_RAR.map(x=>[x.id,x.short])];
@@ -1069,6 +1086,7 @@ function switchTab(v){
 document.querySelectorAll("nav.tabs button").forEach(b=>b.onclick=()=>switchTab(b.dataset.v));
 $("#openHourly").onclick=()=>openPack("hourly");
 $("#buyClassic").onclick=()=>openPack("classic");
+$("#colSearch").addEventListener("input",e=>{colQ=e.target.value.trim();renderCol()});
 $("#filters").onclick=e=>{const f=e.target.dataset.f;if(f){filter=f;renderCol()}};
 document.addEventListener("click",e=>{const s=e.target.closest("main .slot");if(s&&!ov.classList.contains("on"))showDetail(s.dataset.id)});
 $("#recycleAll").addEventListener("click",async e=>{
