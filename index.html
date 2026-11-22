@@ -191,14 +191,14 @@ nav.tabs button.on{color:var(--gold)}
   background-size:220% 100%,220% 100%,100% 100%,100% 100%,100% 100%,100% 100%;
   background-position:var(--gx,0%) 0,calc(100% - var(--gx,0%)) 0,0 0,0 0,0 0,0 0}
 /* lueur qui s'échappe de l'ouverture */
-.slit{position:absolute;left:0;width:100%;top:5.2%;height:0;pointer-events:none;z-index:6}
+.slit{position:absolute;left:0;width:100%;top:5.2%;height:0;pointer-events:none;z-index:6}.slit.sb{z-index:0}.pk-stage .sway{z-index:1}
 .slit .leak{position:absolute;left:0;right:0;top:-10px;height:20px;border-radius:40%;background:radial-gradient(ellipse at center,#ffffffcc 0,var(--gc) 35%,transparent 72%);
   opacity:calc(var(--tp,0)*.5);transform:scaleY(calc(.4 + var(--tp,0)*.9));filter:blur(3px);mix-blend-mode:screen;transition:opacity .15s}
-.slit .beam{position:absolute;left:-12%;right:-12%;bottom:-2px;height:0;opacity:0;filter:blur(5px);mix-blend-mode:screen;transform-origin:50% 100%;
+.slit .beam{position:absolute;left:-12%;right:-12%;bottom:-16px;height:0;opacity:0;filter:blur(5px);mix-blend-mode:screen;transform-origin:50% 100%;
   background:radial-gradient(ellipse 58% 100% at 50% 100%,#ffffffee 0,var(--gc) 24%,color-mix(in srgb,var(--gc) 45%,transparent) 50%,transparent 78%)}
-.torn .slit .leak{opacity:.55;transform:scaleY(1.6);transition:transform .5s,opacity .2s}
+.torn .slit .leak{opacity:.9;transform:scaleY(.7);transition:transform .5s,opacity .2s}
 .torn .slit .beam{animation:beam 1.3s cubic-bezier(.2,.8,.3,1) forwards}
-@keyframes beam{0%{height:0;opacity:0}20%{opacity:.85}100%{height:150px;opacity:.6}}
+@keyframes beam{0%{height:0;opacity:0}20%{opacity:.95}100%{height:170px;opacity:.7}}
 .torn .bigpack .face{box-shadow:0 18px 40px #000c,0 -6px 30px color-mix(in srgb,var(--gc) 45%,transparent)}
 .holo .slit{animation:huecycle 1.1s linear infinite}
 @keyframes huecycle{to{filter:hue-rotate(360deg)}}
@@ -920,7 +920,7 @@ function showPack(kind,pack){
   const best=pack.reduce((a,p)=>Math.max(a,rIdx(BY_ID[p.id].rar)),0), bestR=R_ORDER[best];
   const holo=pack.some(p=>p.holo), uni=bestR==="U";
   const gc=holo&&!uni?"#ff3df0":COLR[bestR];
-  ov.innerHTML=`<div class="pk-stage${uni?" uni":""}${holo?" holo":""}" id="stage" style="--gc:${gc}"><div class="rays"></div><div class="hit"></div><div class="pkfloat"><div class="sway"><div class="bigpack ${kind==="classic"?"shop":""}" id="bp" style="--rot:-180deg"><div class="face fr"><i class="pm"></i><i class="pt"></i><i class="pb"></i></div><div class="face bk"><i class="pm"></i><i class="pt"></i><i class="pb"></i></div>${PACK_EDGES}<div class="cap keep" id="capK"></div><div class="cap peel" id="capP"></div><div class="tearline" id="tline"></div><div class="crimp"></div></div></div><div class="slit" id="slit"><i class="leak"></i><i class="beam"></i></div></div></div>
+  ov.innerHTML=`<div class="pk-stage${uni?" uni":""}${holo?" holo":""}" id="stage" style="--gc:${gc}"><div class="rays"></div><div class="hit"></div><div class="pkfloat"><div class="slit sb" id="slit"><i class="beam"></i></div><div class="sway"><div class="bigpack ${kind==="classic"?"shop":""}" id="bp" style="--rot:-180deg"><div class="face fr"><i class="pm"></i><i class="pt"></i><i class="pb"></i></div><div class="face bk"><i class="pm"></i><i class="pt"></i><i class="pb"></i></div>${PACK_EDGES}<div class="cap keep" id="capK"></div><div class="cap peel" id="capP"></div><div class="tearline" id="tline"></div><div class="crimp"></div></div></div><div class="slit sf" id="slitF"><i class="leak"></i></div></div></div>
     <div class="hint" id="phint">Fais glisser ton doigt le long du haut du paquet pour le déchirer<br><small>Touche ou fais glisser le reste pour le retourner</small></div>`;
   ov.classList.add("on");
   const stage=$("#stage"),bp=$("#bp"),capK=$("#capK"),capP=$("#capP"),tline=$("#tline");
@@ -942,7 +942,7 @@ function showPack(kind,pack){
     tline.style.left=L?"0":`${edge}%`;tline.style.width=`${v*100}%`;tline.style.opacity=v>0?1:0};
   const placeSlit=()=>{const sl=$("#slit"),f=bp.querySelector(".face.fr"),pf=stage.querySelector(".pkfloat");if(!sl||!f||!pf)return;
     const a=f.getBoundingClientRect(),b=pf.getBoundingClientRect();if(!a.width)return;
-    sl.style.top=(a.top-b.top+1)+"px";sl.style.left=(a.left-b.left)+"px";sl.style.width=a.width+"px"};
+    for(const el of [sl,$("#slitF")]){if(!el)continue;el.style.top=(a.top-b.top+1)+"px";el.style.left=(a.left-b.left)+"px";el.style.width=a.width+"px"}};
   const animateTo=(to,ms,cb)=>{cancelAnimationFrame(anim);const from=prog,t0=performance.now();
     const step=t=>{const k=Math.min(1,(t-t0)/ms),e=1-Math.pow(1-k,3);draw(from+(to-from)*e);if(k<1)anim=requestAnimationFrame(step);else cb&&cb()};anim=requestAnimationFrame(step)};
   const setRot=(v,anim)=>{bp.style.transition=anim?"transform .7s cubic-bezier(.3,1.2,.5,1)":"none";bp.style.setProperty("--rot",v+"deg");bp.style.setProperty("--lit",(1-Math.abs(Math.sin(v*Math.PI/180))*.35).toFixed(2));
