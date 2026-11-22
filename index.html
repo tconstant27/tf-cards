@@ -225,7 +225,9 @@ nav.tabs button.on{color:var(--gold)}
   background-size:220% 100%,220% 100%,100% 100%,100% 100%,100% 100%;
   background-position:var(--gx,0%) 0,calc(100% - var(--gx,0%)) 0,0 0,0 0,0 0}
 .bigpack .pm::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(115deg,transparent 35%,#ffffff40 48%,transparent 60%);background-size:250% 100%;animation:foil 2.6s linear infinite}
-.bigpack .edge{top:11.5%!important;bottom:10%!important;width:2px!important;margin-left:-1px!important}
+.bigpack .pside{position:absolute;top:5%;bottom:3.5%;width:6px;margin-left:-3px;transform:rotateY(90deg);
+  clip-path:polygon(50% 0,100% 7.4%,100% 92.6%,50% 100%,0 92.6%,0 7.4%);
+  background:linear-gradient(90deg,#a9a8a3,#e9e8e4 30%,#ffffff 50%,#e2e1dc 70%,#9f9e99);filter:brightness(calc(.75 + var(--lit,1)*.25))}
 .torn .bigpack .pm{box-shadow:0 18px 40px #000c,0 -6px 30px color-mix(in srgb,var(--gc) 45%,transparent)}
 .bigpack.mini .pm{box-shadow:inset 0 0 0 1px #ffffff55,inset 2px 0 4px #ffffff40,inset -2px 0 4px #0000002a}
 /* (ancien coussin) */
@@ -797,10 +799,7 @@ async function openPack(kind){
   showPack(kind,pack);
   refresh();
 }
-const PACK_EDGES=(()=>{const N=6,R=3;let h="";
-  for(const side of ["l","r"])for(let k=0;k<N;k++){const a=(k+.5)/N*180,th=side==="l"?-a:a,light=Math.round(255-Math.sin(a*Math.PI/180)*70-(side==="l"?0:25));
-    h+=`<i class="edge" style="left:${side==="l"?0:100}%;transform:rotateY(${th.toFixed(1)}deg) translateZ(${R}px);background:rgb(${light},${light},${light-4})"></i>`}
-  return h})();
+const PACK_EDGES='<i class="pside" style="left:0"></i><i class="pside" style="left:100%"></i>';
 function showPack(kind,pack){
   const COLR={C:"#e8ecf5",P:"#4cd07d",R:"#3fa7ff",E:"#b46cff",M:"#ff3d71",L:"#ffb020",U:"#ffffff"};
   const best=pack.reduce((a,p)=>Math.max(a,rIdx(BY_ID[p.id].rar)),0), bestR=R_ORDER[best];
