@@ -1329,7 +1329,7 @@ function tradeBuilder(F){
       <div class="filters" style="margin-top:12px"><button class="${mine?"on":""}" id="sGive">Je donne (${ng})</button><button class="${!mine?"on":""}" id="sWant">Je reçois (${nw})</button></div>
       <div class="filters"><button data-x="ALL" class="${flt==="ALL"?"on":""}">Toutes</button><button data-x="DUP" class="${flt==="DUP"?"on":""}">Doublons</button><button data-x="MISS" class="${flt==="MISS"?"on":""}">${mine?`Qui manquent à ${esc(F.pseudo)}`:"Qui me manquent"}</button></div>
       <div class="grid">${list.map(c=>`<div class="slot tb${sel[c.id]?" sel":""}" data-id="${c.id}">${cardHTML(c,{locked:!mine&&!S.col[c.id]})}<span class="badge cnt">${sel[c.id]?`${sel[c.id]}/`:"×"}${col[c.id]}</span>${sel[c.id]?`<span class="badge selb">✓</span>`:""}</div>`).join("")||`<p class="note">Aucune carte ici.</p>`}</div>
-      <div class="tradebar"><span>Tu donnes <b>${ng}</b> · tu reçois <b>${nw}</b></span><button class="btn" id="send" ${ng+nw?"":"disabled"}>Envoyer</button></div>
+      <div class="tradebar"><span>Tu donnes <b>${ng}</b> · tu reçois <b>${nw}</b>${(ng||nw)&&!(ng&&nw)?`<br><small style="color:var(--mut)">Il faut au moins une carte de chaque côté</small>`:""}</span><button class="btn" id="send" ${ng&&nw?"":"disabled"}>Envoyer</button></div>
     </div>`;
     $("#close").onclick=closeOv;
     $("#sGive").onclick=()=>{side="give";flt="ALL";draw()};$("#sWant").onclick=()=>{side="want";flt="ALL";draw()};
