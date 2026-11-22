@@ -36,15 +36,15 @@ header.top{display:flex;align-items:center;justify-content:space-between;padding
 
 /* nav */
 .promo{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(70px + env(safe-area-inset-bottom));width:min(560px,calc(100% - 20px));z-index:19;display:flex;align-items:center;gap:10px;padding:7px 8px 7px 7px;border-radius:16px;text-decoration:none;color:#1d1206;
-  background:radial-gradient(circle at 92% 20%,#ffffff55 0 6px,transparent 7px),radial-gradient(circle at 85% 80%,#ffffff40 0 4px,transparent 5px),radial-gradient(circle at 70% 15%,#ffffff35 0 3px,transparent 4px),linear-gradient(100deg,#f2a640,#e3912c 60%,#cf7a1c);
-  box-shadow:0 6px 22px #0009,inset 0 1px 0 #ffffff66,inset 0 -2px 0 #0000002a;animation:promoIn .5s cubic-bezier(.2,1.3,.5,1) both}
-.promo img{width:46px;height:46px;border-radius:12px;flex:none;box-shadow:0 2px 6px #0005;border:2px solid #fff}
+  background:#eef1f4 url(img/carrelage.jpg?v=1) center/cover;border:1px solid #ffffffcc;
+  box-shadow:0 6px 22px #0009,inset 0 1px 0 #fff,inset 0 -2px 0 #00000014;animation:promoIn .5s cubic-bezier(.2,1.3,.5,1) both}
+.promo img{width:48px;height:48px;border-radius:12px;flex:none;box-shadow:0 2px 6px #0003}
 .promo .ptxt{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.05}
-.promo .ptxt b{font:700 13.5px Rajdhani,Inter,sans-serif;letter-spacing:.4px;text-transform:uppercase}
+.promo .ptxt{color:#2b2d31;text-shadow:0 1px 0 #fff}.promo .ptxt b{font:700 13.5px Rajdhani,Inter,sans-serif;letter-spacing:.4px;text-transform:uppercase}
 .promo .ptxt span{font:700 18px Rajdhani,Inter,sans-serif;text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;margin-top:2px}
-.promo em{font-style:normal;color:#fff;text-shadow:0 1px 0 #7a3f00,0 0 8px #fff7}
-.promo .pgo{flex:none;background:#2b2d31;color:#fff;font:700 12px Inter;padding:8px 9px;border-radius:10px;box-shadow:0 2px 0 #0006}
-.promo .px{flex:none;width:28px;height:28px;border:none;border-radius:50%;background:#0000002a;color:#1d1206;font:700 13px Inter;cursor:pointer;padding:0}
+.promo em{font-style:normal;color:#e3912c;text-shadow:0 1px 0 #fff}
+.promo .pgo{flex:none;background:#e3912c;text-shadow:0 1px 0 #0003;color:#fff;font:700 12px Inter;padding:8px 9px;border-radius:10px;box-shadow:0 2px 0 #0006}
+.promo .px{flex:none;width:28px;height:28px;border:none;border-radius:50%;background:#2b2d3122;color:#2b2d31;font:700 13px Inter;cursor:pointer;padding:0}
 @keyframes promoIn{from{opacity:0;transform:translate(-50%,20px)}}
 body.haspromo{padding-bottom:150px}
 nav.tabs{position:fixed;bottom:0;left:0;right:0;background:#0e111bee;backdrop-filter:blur(10px);border-top:1px solid var(--line);display:flex;justify-content:center;z-index:20;padding-bottom:env(safe-area-inset-bottom)}
