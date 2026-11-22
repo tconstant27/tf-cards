@@ -300,6 +300,10 @@ nav.tabs button.on{color:var(--gold)}
 .avatar{position:relative;overflow:hidden}.avatar img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1}
 .avatar.xl{width:120px;height:120px;border-radius:30px;font-size:52px}
 .avwrap{position:relative;cursor:pointer;flex:none}.avedit{position:absolute;right:-6px;bottom:-6px;background:var(--gold);border-radius:50%;width:26px;height:26px;display:grid;place-items:center;font-size:13px;box-shadow:0 2px 6px #000a;z-index:2}
+.gt{background-clip:text;-webkit-background-clip:text;color:transparent!important;background-size:200% 100%;animation:rainbow 4s linear infinite;font-weight:600}
+.gt.sig{background-image:linear-gradient(90deg,#c9d3e6,#ffffff,#8e9bb5,#ffffff,#c9d3e6)}
+.gt.uni{background-image:linear-gradient(90deg,#ff3d71,#ffb020,#fff35c,#4cd07d,#3fa7ff,#b46cff,#ff3d71)}
+.gt.holo{background-image:linear-gradient(90deg,#ff00c8,#00f0ff,#ffe600,#ff00c8)}
 .sethead{display:flex;justify-content:space-between;align-items:flex-end;margin:22px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line)}
 .sethead b{font:700 18px Rajdhani;display:block}
 .sethead div span{font-size:12px}
@@ -443,7 +447,7 @@ nav.tabs button{position:relative}
 <div id="app" style="display:none">
 <header class="top">
   <div class="brand"><div class="logo"><img src="img/logo.png" alt="Triforce"></div><div><h1>TF CARDS</h1><small>Triforce Esport</small></div></div>
-  <div class="shards">💎 <b id="shardCount">0</b> éclats</div>
+  <div class="shards">🗑️ <b id="shardCount">0</b> déchets</div>
 </header>
 <main class="wrap">
   <section class="view on" id="v-shop">
@@ -461,7 +465,7 @@ nav.tabs button{position:relative}
     <div class="rates">
       <h3>Taux par carte</h3>
       <div id="ratesList"></div>
-      <div class="row"><span>✨ Version holo (toutes raretés)</span><span>3 %</span></div>
+      <div class="row"><span class="gt holo">Holographique</span><span>3 %</span></div>
     </div>
     <div class="last" id="lastPull"></div>
   </section>
@@ -472,7 +476,7 @@ nav.tabs button{position:relative}
     <div id="grid"></div>
   </section>
   <section class="view" id="v-store">
-    <div class="panel" style="margin-top:0;display:flex;align-items:center;justify-content:space-between"><div><h3 class="disp">Tes éclats</h3><p style="margin:2px 0 0">Recycle tes doublons dans ton profil pour en gagner.</p></div><div class="disp" style="font-size:28px;color:#7de3ff;white-space:nowrap;margin-left:12px">💎 <span id="storeShards">0</span></div></div>
+    <div class="panel" style="margin-top:0;display:flex;align-items:center;justify-content:space-between"><div><h3 class="disp">Tes déchets</h3><p style="margin:2px 0 0">Recycle tes doublons dans ton profil pour en gagner.</p></div><div class="disp" style="font-size:28px;color:#7de3ff;white-space:nowrap;margin-left:12px">🗑️ <span id="storeShards">0</span></div></div>
     <div class="sect">Paquets</div>
     <div class="packs">
       <div class="packcard">
@@ -480,7 +484,7 @@ nav.tabs button{position:relative}
         <div style="flex:1">
           <h3>Paquet boutique</h3>
           <p>5 cartes · même taux qu'un paquet gratuit</p>
-          <button class="btn" id="buyClassic">Acheter · 100 💎</button><span class="timer" id="shopHint"></span>
+          <button class="btn" id="buyClassic">Acheter · 100 🗑️</button><span class="timer" id="shopHint"></span>
         </div>
       </div>
     </div>
@@ -707,11 +711,11 @@ function renderAch(){
   $("#achList").innerHTML=rows.sort((x,y)=>order(x)-order(y)).map(r=>{
     const a=r.cur, ok=!r.all&&a.progress>=a.target;
     return `<div class="ach${r.all?" done":ok?" ready":""}"><div class="ai"><b>${esc(a.family)} ${roman[a.level]||a.level} <small>· niveau ${a.level}/${r.n}</small></b><small>${r.all?"Tous les niveaux terminés":esc(a.descr)+" · "+a.progress+"/"+a.target}</small><div class="bar"><i style="width:${r.all?100:a.progress/a.target*100}%"></i></div></div>
-      ${r.all?`<span class="rw">✔</span>`:ok?`<button class="btn sm" data-ach="${a.id}">+${a.reward} 💎</button>`:`<span class="rw" style="opacity:.6">${a.reward} 💎</span>`}</div>`}).join("");
+      ${r.all?`<span class="rw">✔</span>`:ok?`<button class="btn sm" data-ach="${a.id}">+${a.reward} 🗑️</button>`:`<span class="rw" style="opacity:.6">${a.reward} 🗑️</span>`}</div>`}).join("");
 }
 $("#achList").addEventListener("click",async e=>{
   const b=e.target.closest("[data-ach]");if(!b||b.disabled)return;b.disabled=true;
-  try{const g=await rpc("claim_achievement",{p_id:b.dataset.ach});toast(`Succès récupéré : +${g} 💎`);await refresh()}catch(err){b.disabled=false}
+  try{const g=await rpc("claim_achievement",{p_id:b.dataset.ach});toast(`Succès récupéré : +${g} 🗑️`);await refresh()}catch(err){b.disabled=false}
 });
 
 /* ---------- SHOP ---------- */
@@ -729,10 +733,10 @@ function renderShop(){
   }
   $("#buyClassic").disabled=S.shards<100||busy;
   $("#storeShards").textContent=S.shards;
-  $("#shopHint").textContent=S.shards<100?`encore ${100-S.shards} 💎`:"";
+  $("#shopHint").textContent=S.shards<100?`encore ${100-S.shards} 🗑️`:"";
 }
 function renderRates(){
-  $("#ratesList").innerHTML=R_ORDER.map(r=>`<div class="row"><span style="color:var(--${r.toLowerCase()})">${RAR[r].name}${r==="U"?" (1 seul exemplaire)":r==="S"?" (3 exemplaires par carte)":""}</span><span>${RAR[r].rate.toLocaleString("fr-FR")} %</span></div>`).join("");
+  $("#ratesList").innerHTML=R_ORDER.map(r=>`<div class="row"><span ${rcls(r)}>${RAR[r].name}${r==="U"?" (1 seul exemplaire)":r==="S"?" (3 exemplaires par carte)":""}</span><span>${RAR[r].rate.toLocaleString("fr-FR")} %</span></div>`).join("");
 }
 function renderLast(){
   const l=(S.last||[]).filter(p=>BY_ID[p.id]);
@@ -760,6 +764,7 @@ async function pickAvatar(){
   inp.click();
 }
 async function removeAvatar(){try{await sb.storage.from("avatars").remove([ME+".jpg"]);S.avatar_v=await rpc("set_avatar",{p_has:false});renderProf();toast("Photo retirée")}catch(e){}}
+const rcls=r=>r==="S"?'class="gt sig"':r==="U"?'class="gt uni"':`style="color:var(--${r.toLowerCase()})"`;
 const norm=t=>String(t||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
 let colQ="";
 function renderCol(){
@@ -783,7 +788,7 @@ function renderCol(){
   let html="";
   if(filter==="SETS"||SET_BY[filter]){
     let lastR="";(SET_BY[filter]?[SET_BY[filter]]:SETS_BY_RAR).forEach(x=>{
-      if(!SET_BY[filter]&&x.rar!==lastR){lastR=x.rar;html+=`<div class="rarhead" style="color:var(--${x.rar.toLowerCase()})">${RAR[x.rar].name}s</div>`}
+      if(!SET_BY[filter]&&x.rar!==lastR){lastR=x.rar;html+=`<div class="rarhead" ${rcls(x.rar)}>${RAR[x.rar].name}s</div>`}
       const cs=CARDS.filter(c=>c.set===x.id), o=cs.filter(c=>S.col[c.id]).length;
       html+=`<div class="sethead"><div><b>${x.name}</b></div><span class="${o===cs.length?"done":""}">${o===cs.length?"✔ ":""}${o}/${cs.length}</span></div><div class="grid">${cs.map(c=>slotHTML(c)).join("")}</div>`;
     });
@@ -818,11 +823,11 @@ function renderProf(){
   $("#vitrine").innerHTML=vitrineHTML(show,S.holo,true);
   document.querySelectorAll("#vitrine .vslot3").forEach(el=>el.onclick=()=>pickShowcase(+el.dataset.s));
   const dups=CARDS.reduce((a,c)=>a+Math.max(0,(S.col[c.id]||0)-1),0), val=CARDS.reduce((a,c)=>a+Math.max(0,(S.col[c.id]||0)-1)*RAR[c.rar].dup,0);
-  $("#dupTxt").textContent=dups?`${dups} doublon${dups>1?"s":""} en stock. Garde-les pour les échanges, ou recycle-les contre ${val} 💎.`:"Aucun doublon pour l'instant.";
+  $("#dupTxt").textContent=dups?`${dups} doublon${dups>1?"s":""} en stock. Garde-les pour les échanges, ou recycle-les contre ${val} 🗑️.`:"Aucun doublon pour l'instant.";
   $("#recycleAll").disabled=!dups;
   $("#kpis").innerHTML=statsKPI(S.col,S.holo,S.packs);
   $("#rarBars").innerHTML=R_ORDER.filter(r=>CARDS.some(c=>c.rar===r)).map(r=>{const all=CARDS.filter(c=>c.rar===r),o=all.filter(c=>S.col[c.id]).length;
-    return `<div class="row"><span style="color:var(--${r.toLowerCase()})">${RAR[r].name}</span><div class="bar"><i style="width:${o/all.length*100}%"></i></div><span>${o}/${all.length}</span></div>`}).join("");
+    return `<div class="row"><span ${rcls(r)}>${RAR[r].name}</span><div class="bar"><i style="width:${o/all.length*100}%"></i></div><span>${o}/${all.length}</span></div>`}).join("");
   $("#setBars").innerHTML=SETS_BY_RAR.map(x=>{const cs=CARDS.filter(c=>c.set===x.id),o=cs.filter(c=>S.col[c.id]).length;
     return `<div class="row"><span>${x.short}</span><div class="bar"><i style="width:${o/cs.length*100}%"></i></div><span>${o}/${cs.length}</span></div>`}).join("");
 }
@@ -962,7 +967,7 @@ function showDetail(id){
   ov.innerHTML=`<div class="detail">${tiltCard(cardHTML(c,{holo:!!S.holo[id],locked:!n}))}</div>
     <div class="dinfo"><h2>${esc(c.name)}</h2>
     <p>${t.name} · ${c.role}<br>${RAR[c.rar].name}${n?` · possédée ×${n}`:""}${S.holo[id]?" · ✨ holo":""}</p>${c.rar==="S"?`<p class="note" id="sstock">Édition limitée : 3 exemplaires seulement.</p>`:""}
-    ${n?`<button class="btn" id="vit">${S.showcase.includes(id)?"★ En vitrine":"Mettre en vitrine"}</button> ${n>1?`<button class="btn alt" id="recy">Recycler 1 doublon (+${RAR[c.rar].dup} 💎)</button>`:""}`
+    ${n?`<button class="btn" id="vit">${S.showcase.includes(id)?"★ En vitrine":"Mettre en vitrine"}</button> ${n>1?`<button class="btn alt" id="recy">Recycler 1 doublon (+${RAR[c.rar].dup} 🗑️)</button>`:""}`
       :c.rar==="U"?`<p class="note" id="uowner">Exemplaire unique : une seule personne peut l'avoir.</p>`:`<p class="note">Pas encore obtenue : ouvre des paquets ou échange-la avec un ami.</p>`}
     <button class="btn alt" id="close">Fermer</button>
     ${vers.length>1?`<div class="sect">${esc(c.name)} : ${vers.filter(v=>S.col[v.id]).length}/${vers.length} versions</div>
@@ -1157,7 +1162,7 @@ document.addEventListener("click",e=>{const s=e.target.closest("main .slot");if(
 $("#recycleAll").addEventListener("click",async e=>{
   const b=e.currentTarget;if(b.disabled)return;
   b.disabled=true;b.textContent="Recyclage…";
-  try{const g=await rpc("recycle_all");await refresh();toast(`Doublons recyclés : +${g} 💎`)}
+  try{const g=await rpc("recycle_all");await refresh();toast(`Doublons recyclés : +${g} 🗑️`)}
   catch(err){$("#dupTxt").textContent="Erreur : "+((err&&err.message)||err)}
   finally{b.textContent="Recycler tous les doublons";renderProf()}
 });
