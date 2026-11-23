@@ -1435,9 +1435,10 @@ async function loadQuiz(){
 }
 function qIntro(){
   if(!QZ||Date.parse(QZ.ends_at)<=now())return;
-  const max=QZ.n*QZ.reward_per_good;
+  const pg=QZ.reward_per_good||0,pf=QZ.reward_perfect||0;
+  const rw=pg?`<b style="color:var(--txt)">${pg} déchets par bonne réponse</b>${pf?`, +${pf} pour un sans-faute`:""}.`:`<b style="color:var(--txt)">Sans-faute = ${pf} déchets (2 paquets)</b>. Une seule erreur et c'est perdu !`;
   qov().innerHTML=`<div class="qz"><h2>🎯 ${esc(QZ.title)}</h2>
-    <p>${QZ.n} questions, disponible jusqu'à ${qHour(QZ.ends_at)}.<br><b style="color:var(--txt)">${QZ.reward_per_good} déchets par bonne réponse</b>, soit ${max} déchets (2 paquets) pour un sans-faute.</p>
+    <p>${QZ.n} questions, disponible jusqu'à ${qHour(QZ.ends_at)}.<br>${rw}</p>
     <p class="warn">Une seule tentative. Si tu quittes l'appli ou changes d'onglet pendant le quiz, il s'arrête et tu ne gagnes rien.</p>
     <div class="ovact"><button class="btn alt" id="qLater">Plus tard</button><button class="btn" id="qGo">Commencer</button></div></div>`;
   qov().classList.add("on");
@@ -1470,7 +1471,7 @@ async function qAnswer(i,el){
   if(r.done){
     QZP=null;
     qov().innerHTML=`<div class="qz"><h2>Quiz terminé !</h2><div class="big">${r.score} / ${r.n}</div>
-      <p>${r.reward>0?`Tu gagnes <b style="color:var(--txt)">${r.reward} déchets</b> 🗑️`:"Aucune bonne réponse cette fois…"}</p>
+      <p>${r.reward>0?`Tu gagnes <b style="color:var(--txt)">${r.reward} déchets</b> 🗑️`:"Pas de sans-faute, pas de récompense cette fois…"}</p>
       <div class="ovact"><button class="btn" id="qOk">Fermer</button></div></div>`;
     document.getElementById("qOk").onclick=()=>{qClose();refresh()};
   }else{QZP.step=r.step;qShow()}
@@ -1490,7 +1491,6 @@ function qAbandon(){
 }
 document.addEventListener("visibilitychange",()=>{if(document.hidden)qAbandon()});
 window.addEventListener("pagehide",qAbandon);
-window.addEventListener("blur",()=>{if(QZP&&document.hidden)qAbandon()});
 </script>
 </body>
 </html>
