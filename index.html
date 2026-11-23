@@ -775,7 +775,7 @@ async function refresh(){
   if(!m||!m.id){forceLogout();return}
   S.pseudo=m.pseudo;S.avatar_v=m.avatar_v||0;S.created_at=m.created_at;S.shards=m.shards;S.stock=m.stock;S.tick=m.tick;S.next=m.next_ms||H;S.daily_ok=m.daily_ok;
   S.packs=m.packs;S.cards_total=m.cards_total;S.showcase=(m.showcase||[]).concat([null,null,null]).slice(0,3);S.last=m.last_pack||[];
-  S.col={};S.holo={};S.got={};
+  S.col={};S.holo={};S.got={};S.listed=new Set(m.listed||[]);
   for(const [k,v] of Object.entries(m.collection||{})){if(v.q>0)S.col[k]=v.q;if(v.h)S.holo[k]=true;S.got[k]=v.t||0}
   clockOff=Date.parse(m.now)-Date.now();
   renderAll();
@@ -907,8 +907,9 @@ function renderProf(){
   const show=S.showcase.map(id=>id&&S.col[id]?id:null);
   $("#vitrine").innerHTML=vitrineHTML(show,S.holo,true);
   document.querySelectorAll("#vitrine .vslot3").forEach(el=>el.onclick=()=>pickShowcase(+el.dataset.s));
-  const dups=CARDS.reduce((a,c)=>a+Math.max(0,(S.col[c.id]||0)-1),0), val=CARDS.reduce((a,c)=>a+Math.max(0,(S.col[c.id]||0)-1)*RAR[c.rar].dup,0);
-  $("#dupTxt").innerHTML=dups?`${dups} doublon${dups>1?"s":""} en stock. Garde-les pour les échanges, ou recycle-les contre ${val} ${BAG}.`:"Aucun doublon pour l'instant.";
+  const keep=c=>S.listed&&S.listed.has(c.id)?2:1, rc=c=>Math.max(0,(S.col[c.id]||0)-keep(c)), dups=CARDS.reduce((a,c)=>a+rc(c),0), val=CARDS.reduce((a,c)=>a+rc(c)*RAR[c.rar].dup,0), hubN=CARDS.filter(c=>keep(c)===2&&(S.col[c.id]||0)>1).length;
+  $("#dupTxt").innerHTML=dups?`${dups} doublon${dups>1?"s":""} en stock. Garde-les pour les échanges, ou recycle-les contre ${val} ${BAG}.`:"Aucun doublon à recycler pour l'instant.";
+  if(hubN)$("#dupTxt").innerHTML+=` <span style="color:var(--mut)">🔒 ${hubN} carte${hubN>1?"s":""} du hub d'échange protégée${hubN>1?"s":""}.</span>`;
   $("#recycleAll").disabled=!dups;
   $("#kpis").innerHTML=statsKPI(S.col,S.holo,S.packs);
   $("#rarBars").innerHTML=R_ORDER.filter(r=>CARDS.some(c=>c.rar===r)).map(r=>{const all=CARDS.filter(c=>c.rar===r),o=all.filter(c=>S.col[c.id]).length;
@@ -925,7 +926,7 @@ const ov=$("#ov");
     $("#promoX").onclick=e=>{e.preventDefault();e.stopPropagation();pr.remove();document.body.classList.remove("haspromo");try{sessionStorage.setItem("tf_promo_x","1")}catch(e){}}}})();
 const closeOv=()=>{ov.classList.remove("on");ov.innerHTML=""};
 let LB=[],lbSort="score";
-const LB_SORTS={score:["Score",r=>r.score,r=>`${r.score} pts`],cards:["Cartes",r=>r.distinct_cards*1e4+r.total_cards,r=>`${r.distinct_cards}/${CARDS.length}`],rare:["Raretés",r=>r.nb_u*1e9+r.nb_s*1e6+r.nb_l*1e3+r.nb_m,r=>""]};
+const LB_SORTS={score:["Score",r=>r.score,r=>`${r.score} pts`],cards:["Cartes",r=>r.distinct_cards*1e4+r.total_cards,r=>`${r.distinct_cards}/${CARDS.length}`],sets:["Éditions",r=>(r.nb_sets||0)*1e4+r.distinct_cards,r=>`${r.nb_sets||0} éd.`],rare:["Raretés",r=>r.nb_u*1e9+r.nb_s*1e6+r.nb_l*1e3+r.nb_m,r=>""]};
 function renderLB(){
   const [,key,val]=LB_SORTS[lbSort];
   const rows=LB.slice().sort((a,b)=>key(b)-key(a)||b.score-a.score);
@@ -1165,7 +1166,7 @@ function showDetail(id){
   ov.innerHTML=`<div class="detail">${tiltCard(cardHTML(c,{holo:!!S.holo[id],locked:!n}))}</div>
     <div class="dinfo"><h2>${esc(cName(c,!n))}</h2>
     <p>${infoLine(c)}<br>${RAR[c.rar].name}${n?` · possédée ×${n}`:""}${S.holo[id]?" · ✨ holo":""}</p>${c.rar==="S"?`<p class="note" id="sstock">Édition limitée : 3 exemplaires seulement.</p>`:""}
-    ${n?`<button class="btn" id="vit">${S.showcase.includes(id)?"★ En vitrine":"Mettre en vitrine"}</button> ${n>1?`<button class="btn alt" id="recy">Recycler 1 doublon (+${RAR[c.rar].dup} ${BAG})</button>`:""}`
+    ${n?`<button class="btn" id="vit">${S.showcase.includes(id)?"★ En vitrine":"Mettre en vitrine"}</button> ${n>(S.listed&&S.listed.has(id)?2:1)?`<button class="btn alt" id="recy">Recycler 1 doublon (+${RAR[c.rar].dup} ${BAG})</button>`:n>1?`<p class="note">🔒 Doublon réservé au hub d'échange</p>`:""}`
       :c.rar==="U"?`<p class="note" id="uowner">Exemplaire unique : une seule personne peut l'avoir.</p>`:`<p class="note">Pas encore obtenue : ouvre des paquets ou échange-la avec un ami.</p>`}
     <button class="btn alt" id="close">Fermer</button>
     ${vers.length>1?`<div class="sect">${esc(c.name)} : ${vers.filter(v=>S.col[v.id]).length}/${vers.length} versions</div>
