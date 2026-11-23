@@ -487,6 +487,24 @@ img.bag{height:1.15em;width:auto;vertical-align:-.22em;display:inline-block}
 .tradebar{position:fixed;left:0;right:0;bottom:0;background:#0e111bf2;border-top:1px solid var(--line);padding:12px 16px calc(12px + env(safe-area-inset-bottom));display:flex;justify-content:space-between;align-items:center;gap:10px;z-index:60;font-size:14px}
 nav.tabs button{position:relative}
 #navBadge,.navb{position:absolute;top:4px;left:calc(50% + 6px);background:var(--m);color:#fff;font:700 11px Inter;border-radius:99px;padding:1px 6px}
+
+/* ---------- QUIZ ---------- */
+#quizOv{z-index:70}
+.qz{max-width:420px;width:100%;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px;text-align:center}
+.qz h2{font-size:26px;margin-bottom:6px}
+.qz p{color:var(--mut);font-size:14px;line-height:1.45;margin:8px 0}
+.qz .warn{color:#ffb4b4;background:#ff3d7114;border:1px solid #ff3d7144;border-radius:10px;padding:8px 10px;font-size:13px}
+.qz .qn{color:var(--gold);font:700 14px Rajdhani;letter-spacing:1px;text-transform:uppercase}
+.qz .qq{font:700 21px Rajdhani;margin:10px 0 16px;color:var(--txt)}
+.qz .qc{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.qz .qc button{background:var(--panel2);border:1px solid var(--line);color:var(--txt);font:700 16px Inter;padding:14px 8px;border-radius:12px;cursor:pointer}
+.qz .qc button:disabled{opacity:.5;cursor:default}
+.qz .qc button.sel{border-color:var(--gold);color:var(--gold);opacity:1}
+.qz .qbar{display:flex;gap:4px;justify-content:center;margin:10px 0 0}
+.qz .qbar i{width:28px;height:5px;border-radius:3px;background:var(--line)}
+.qz .qbar i.f{background:var(--gold)}
+.qz .big{font:700 44px Rajdhani;color:var(--gold);margin:6px 0}
+.qz .ovact{justify-content:center}
 </style>
 </head>
 <body>
@@ -747,7 +765,7 @@ async function onSession(session){
   if(ME===session.user.id)return;
   ME=session.user.id;
   $("#auth").style.display="none";$("#app").style.display="";
-  await refresh();loadSocial();
+  await refresh();loadSocial();loadQuiz();
 }
 
 /* ---------- STATE ---------- */
@@ -1400,6 +1418,79 @@ else{
   sb.auth.onAuthStateChange((_e,session)=>{setTimeout(()=>onSession(session),0)});
 }
 
+</script>
+<div class="ov" id="quizOv"></div>
+<script>
+/* ---------- QUIZ ÉVÉNEMENT ---------- */
+let QZ=null, QZP=null; // QZ = quiz en cours d'affichage, QZP = partie en cours (token, questions, étape)
+const qov=()=>document.getElementById("quizOv");
+const qClose=()=>{const o=qov();o.classList.remove("on");o.innerHTML=""};
+const qHour=d=>new Date(d).toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit",timeZone:"Europe/Paris"});
+async function loadQuiz(){
+  try{
+    const {data,error}=await sb.rpc("quiz_current");
+    if(error||!data||data.status)return;
+    QZ=data;qIntro();
+  }catch(e){}
+}
+function qIntro(){
+  if(!QZ||Date.parse(QZ.ends_at)<=now())return;
+  const max=QZ.n*QZ.reward_per_good;
+  qov().innerHTML=`<div class="qz"><h2>🎯 ${esc(QZ.title)}</h2>
+    <p>${QZ.n} questions, disponible jusqu'à ${qHour(QZ.ends_at)}.<br><b style="color:var(--txt)">${QZ.reward_per_good} déchets par bonne réponse</b>, soit ${max} déchets (2 paquets) pour un sans-faute.</p>
+    <p class="warn">Une seule tentative. Si tu quittes l'appli ou changes d'onglet pendant le quiz, il s'arrête et tu ne gagnes rien.</p>
+    <div class="ovact"><button class="btn alt" id="qLater">Plus tard</button><button class="btn" id="qGo">Commencer</button></div></div>`;
+  qov().classList.add("on");
+  document.getElementById("qLater").onclick=qClose;
+  document.getElementById("qGo").onclick=qStart;
+}
+async function qStart(){
+  const b=document.getElementById("qGo");b.disabled=true;
+  let r;
+  try{r=await rpc("quiz_start",{p_quiz:QZ.id})}catch(e){qClose();return}
+  const {data}=await sb.auth.getSession();
+  QZP={token:r.token,qs:r.questions,step:0,jwt:data.session&&data.session.access_token,busy:false};
+  qShow();
+}
+function qShow(){
+  const q=QZP.qs[QZP.step];
+  qov().innerHTML=`<div class="qz"><div class="qn">Question ${QZP.step+1} / ${QZP.qs.length}</div>
+    <div class="qbar">${QZP.qs.map((_,i)=>`<i class="${i<=QZP.step?"f":""}"></i>`).join("")}</div>
+    <div class="qq">${esc(q.q)}</div>
+    <div class="qc">${q.c.map((c,i)=>`<button data-i="${i}">${esc(c)}</button>`).join("")}</div></div>`;
+  qov().querySelectorAll(".qc button").forEach(el=>el.onclick=()=>qAnswer(+el.dataset.i,el));
+}
+async function qAnswer(i,el){
+  if(!QZP||QZP.busy)return;QZP.busy=true;
+  qov().querySelectorAll(".qc button").forEach(x=>x.disabled=true);el.classList.add("sel");
+  let r;
+  try{r=await rpc("quiz_answer",{p_quiz:QZ.id,p_token:QZP.token,p_choice:i})}
+  catch(e){QZP=null;qEnd("Le quiz est terminé.","Pas de récompense.");return}
+  QZP.busy=false;
+  if(r.done){
+    QZP=null;
+    qov().innerHTML=`<div class="qz"><h2>Quiz terminé !</h2><div class="big">${r.score} / ${r.n}</div>
+      <p>${r.reward>0?`Tu gagnes <b style="color:var(--txt)">${r.reward} déchets</b> 🗑️`:"Aucune bonne réponse cette fois…"}</p>
+      <div class="ovact"><button class="btn" id="qOk">Fermer</button></div></div>`;
+    document.getElementById("qOk").onclick=()=>{qClose();refresh()};
+  }else{QZP.step=r.step;qShow()}
+}
+function qEnd(t,s){
+  qov().innerHTML=`<div class="qz"><h2>${esc(t)}</h2><p>${esc(s)}</p><div class="ovact"><button class="btn alt" id="qOk">Fermer</button></div></div>`;
+  qov().classList.add("on");
+  document.getElementById("qOk").onclick=qClose;
+}
+function qAbandon(){
+  if(!QZP)return;
+  const p=QZP;QZP=null;
+  try{fetch(SB_URL+"/rest/v1/rpc/quiz_abandon",{method:"POST",keepalive:true,
+    headers:{"Content-Type":"application/json",apikey:SB_KEY,Authorization:"Bearer "+(p.jwt||SB_KEY)},
+    body:JSON.stringify({p_quiz:QZ.id,p_token:p.token})})}catch(e){}
+  qEnd("Quiz arrêté","Tu as quitté l'appli pendant le quiz : il est terminé, sans récompense.");
+}
+document.addEventListener("visibilitychange",()=>{if(document.hidden)qAbandon()});
+window.addEventListener("pagehide",qAbandon);
+window.addEventListener("blur",()=>{if(QZP&&document.hidden)qAbandon()});
 </script>
 </body>
 </html>
