@@ -409,6 +409,7 @@ nav.tabs button.on{color:var(--gold)}
 .detail{touch-action:none;cursor:pointer}
 .frdet>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;user-select:none}.frdet>summary::-webkit-details-marker{display:none}
 .frchev{margin-left:auto;transition:transform .2s;font-size:16px}.frdet:not([open]) .frchev{transform:rotate(-90deg)}
+.recyr-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.recyr{font-size:12px}
 .lbrowbtn{display:flex;gap:8px;margin:0 0 12px}.lbbtn{flex:1;margin:0}
 .hrow{display:flex;gap:12px;align-items:center;padding:10px 4px;border-bottom:1px solid #ffffff10}
 .hrow .hc{width:84px;flex:none}.hinfo{flex:1;min-width:0}.hinfo b{display:block}.hinfo small{color:var(--mut);font-size:11.5px;display:block;margin-top:2px}
@@ -568,7 +569,7 @@ nav.tabs button{position:relative}
     <div class="kpis" id="kpis"></div>
     <div class="sect">Succès <span id="achCount" style="letter-spacing:0"></span></div>
     <div id="achList"></div>
-    <div class="panel"><h3 class="disp">Doublons</h3><p id="dupTxt"></p><button class="btn" id="recycleAll" type="button">Recycler tous les doublons</button></div>
+    <div class="panel"><h3 class="disp">Doublons</h3><p id="dupTxt"></p><button class="btn" id="recycleAll" type="button">Recycler tous les doublons</button><div id="recyR" class="recyr-row"></div></div>
     <div class="panel raritybars"><h3 class="disp">Complétion par rareté</h3><div id="rarBars" style="margin-top:8px"></div></div>
     <div class="panel raritybars"><h3 class="disp">Éditions complétées</h3><div id="setBars" style="margin-top:8px"></div></div>
     <div class="panel" id="installPanel"><h3 class="disp">Installer l'application</h3><p id="installTxt">Ajoute TF Cards à ton écran d'accueil pour l'ouvrir comme une vraie appli.</p><button class="btn" id="installBtn">Installer TF Cards</button></div>
@@ -775,7 +776,7 @@ async function refresh(){
   if(!m||!m.id){forceLogout();return}
   S.pseudo=m.pseudo;S.avatar_v=m.avatar_v||0;S.created_at=m.created_at;S.shards=m.shards;S.stock=m.stock;S.tick=m.tick;S.next=m.next_ms||H;S.daily_ok=m.daily_ok;
   S.packs=m.packs;S.cards_total=m.cards_total;S.showcase=(m.showcase||[]).concat([null,null,null]).slice(0,3);S.last=m.last_pack||[];
-  S.col={};S.holo={};S.got={};S.listed=new Set(m.listed||[]);
+  S.col={};S.holo={};S.got={};S.listed=new Set(m.listed||[]);S.inTrade=m.in_trade||{};
   for(const [k,v] of Object.entries(m.collection||{})){if(v.q>0)S.col[k]=v.q;if(v.h)S.holo[k]=true;S.got[k]=v.t||0}
   clockOff=Date.parse(m.now)-Date.now();
   renderAll();
@@ -907,9 +908,11 @@ function renderProf(){
   const show=S.showcase.map(id=>id&&S.col[id]?id:null);
   $("#vitrine").innerHTML=vitrineHTML(show,S.holo,true);
   document.querySelectorAll("#vitrine .vslot3").forEach(el=>el.onclick=()=>pickShowcase(+el.dataset.s));
-  const keep=c=>S.listed&&S.listed.has(c.id)?2:1, rc=c=>Math.max(0,(S.col[c.id]||0)-keep(c)), dups=CARDS.reduce((a,c)=>a+rc(c),0), val=CARDS.reduce((a,c)=>a+rc(c)*RAR[c.rar].dup,0), hubN=CARDS.filter(c=>keep(c)===2&&(S.col[c.id]||0)>1).length;
+  const keep=c=>1+(S.listed&&S.listed.has(c.id)?1:0)+((S.inTrade||{})[c.id]||0), rc=c=>Math.max(0,(S.col[c.id]||0)-keep(c)), dups=CARDS.reduce((a,c)=>a+rc(c),0), val=CARDS.reduce((a,c)=>a+rc(c)*RAR[c.rar].dup,0), hubN=CARDS.filter(c=>keep(c)>1&&(S.col[c.id]||0)>1).length;
+  const byR=R_ORDER.map(r=>{const L=CARDS.filter(c=>c.rar===r);return {r,n:L.reduce((a,c)=>a+rc(c),0),v:L.reduce((a,c)=>a+rc(c)*RAR[c.rar].dup,0)}}).filter(x=>x.n);
+  $("#recyR").innerHTML=byR.length>1?byR.map(x=>`<button type="button" class="btn alt sm recyr" data-rr="${x.r}"><span ${rcls(x.r)}>${RAR[x.r].name}</span> ×${x.n} · +${x.v} ${BAG}</button>`).join(""):"";
   $("#dupTxt").innerHTML=dups?`${dups} doublon${dups>1?"s":""} en stock. Garde-les pour les échanges, ou recycle-les contre ${val} ${BAG}.`:"Aucun doublon à recycler pour l'instant.";
-  if(hubN)$("#dupTxt").innerHTML+=` <span style="color:var(--mut)">🔒 ${hubN} carte${hubN>1?"s":""} du hub d'échange protégée${hubN>1?"s":""}.</span>`;
+  if(hubN)$("#dupTxt").innerHTML+=` <span style="color:var(--mut)">🔒 ${hubN} carte${hubN>1?"s":""} protégée${hubN>1?"s":""} (proposée${hubN>1?"s":""} dans un échange ou le hub).</span>`;
   $("#recycleAll").disabled=!dups;
   $("#kpis").innerHTML=statsKPI(S.col,S.holo,S.packs);
   $("#rarBars").innerHTML=R_ORDER.filter(r=>CARDS.some(c=>c.rar===r)).map(r=>{const all=CARDS.filter(c=>c.rar===r),o=all.filter(c=>S.col[c.id]).length;
@@ -1166,7 +1169,7 @@ function showDetail(id){
   ov.innerHTML=`<div class="detail">${tiltCard(cardHTML(c,{holo:!!S.holo[id],locked:!n}))}</div>
     <div class="dinfo"><h2>${esc(cName(c,!n))}</h2>
     <p>${infoLine(c)}<br>${RAR[c.rar].name}${n?` · possédée ×${n}`:""}${S.holo[id]?" · ✨ holo":""}</p>${c.rar==="S"?`<p class="note" id="sstock">Édition limitée : 3 exemplaires seulement.</p>`:""}
-    ${n?`<button class="btn" id="vit">${S.showcase.includes(id)?"★ En vitrine":"Mettre en vitrine"}</button> ${n>(S.listed&&S.listed.has(id)?2:1)?`<button class="btn alt" id="recy">Recycler 1 doublon (+${RAR[c.rar].dup} ${BAG})</button>`:n>1?`<p class="note">🔒 Doublon réservé au hub d'échange</p>`:""}`
+    ${n?`<button class="btn" id="vit">${S.showcase.includes(id)?"★ En vitrine":"Mettre en vitrine"}</button> ${n>(1+(S.listed&&S.listed.has(id)?1:0)+((S.inTrade||{})[id]||0))?`<button class="btn alt" id="recy">Recycler 1 doublon (+${RAR[c.rar].dup} ${BAG})</button>`:n>1?`<p class="note">🔒 Doublon réservé (échange en attente ou hub)</p>`:""}`
       :c.rar==="U"?`<p class="note" id="uowner">Exemplaire unique : une seule personne peut l'avoir.</p>`:`<p class="note">Pas encore obtenue : ouvre des paquets ou échange-la avec un ami.</p>`}
     <button class="btn alt" id="close">Fermer</button>
     ${vers.length>1?`<div class="sect">${esc(c.name)} : ${vers.filter(v=>S.col[v.id]).length}/${vers.length} versions</div>
@@ -1377,6 +1380,12 @@ $("#buyClassic").onclick=()=>openPack("classic");
 $("#colSearch").addEventListener("input",e=>{colQ=e.target.value.trim();renderCol()});
 $("#filters").onclick=e=>{const f=e.target.dataset.f;if(f){filter=f;renderCol()}};
 document.addEventListener("click",e=>{const s=e.target.closest("main .slot");if(s&&!ov.classList.contains("on"))showDetail(s.dataset.id)});
+$("#recyR").addEventListener("click",async e=>{
+  const b=e.target.closest("[data-rr]");if(!b||b.disabled)return;const r=b.dataset.rr;
+  document.querySelectorAll("#recyR button").forEach(x=>x.disabled=true);
+  try{const g=await rpc("recycle_all",{p_rar:r});await refresh();toast(`${RAR[r].name} recyclées : +${g} 🗑️`)}
+  catch(err){}finally{renderProf()}
+});
 $("#recycleAll").addEventListener("click",async e=>{
   const b=e.currentTarget;if(b.disabled)return;
   b.disabled=true;b.textContent="Recyclage…";
