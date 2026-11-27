@@ -770,8 +770,15 @@ async function onSession(session){
 }
 
 /* ---------- STATE ---------- */
+let promoDone=false;
+async function claimPromos(){if(promoDone)return;promoDone=true;
+  try{const {data,error}=await sb.rpc("claim_promos");if(error||!data||!data.length)return;
+    for(const g of data){ov.innerHTML=`<div class="dinfo" style="max-width:320px;text-align:center"><div style="font-size:54px;line-height:1">🎁</div><h2>${esc(g.title)} !</h2><p style="font-size:17px">Cadeau de connexion : <b style="color:var(--gold,#f7a823)">+${g.reward} ${BAG}</b><br>soit ${Math.floor(g.reward/100)} paquets à ouvrir dans la Boutique.</p><button class="btn" id="close">Merci !</button></div>`;
+      ov.classList.add("on");$("#close").onclick=closeOv}
+    const m=await rpc("get_me");if(m&&m.id){S.shards=m.shards;renderAll()}
+  }catch(e){}}
 async function refresh(){
-  loadAch();
+  loadAch();setTimeout(claimPromos,600);
   const m=await rpc("get_me");
   if(!m||!m.id){forceLogout();return}
   S.pseudo=m.pseudo;S.avatar_v=m.avatar_v||0;S.created_at=m.created_at;S.shards=m.shards;S.stock=m.stock;S.tick=m.tick;S.next=m.next_ms||H;S.daily_ok=m.daily_ok;
