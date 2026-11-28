@@ -410,6 +410,11 @@ nav.tabs button.on{color:var(--gold)}
 .frdet>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:8px;user-select:none}.frdet>summary::-webkit-details-marker{display:none}
 .frchev{margin-left:auto;transition:transform .2s;font-size:16px}.frdet:not([open]) .frchev{transform:rotate(-90deg)}
 .recyr-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.recyr{font-size:12px}
+.stgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:12px 0 6px}
+.stk{background:var(--panel2,#141826);border:1px solid var(--line,#2a2f40);border-radius:12px;padding:10px 12px;display:flex;flex-direction:column}
+.stk b{font:700 22px Rajdhani,Inter,sans-serif}.stk span{color:var(--mut);font-size:12px}
+.strow{padding:10px 2px;border-bottom:1px solid #ffffff10}.sth{display:flex;align-items:baseline;gap:10px}.sth .stn{margin-left:auto;font-weight:800}
+.stp{font-size:12px;color:var(--mut);min-width:92px;text-align:right}.stl{font-size:12.5px;margin-top:4px}.stl small,.sth small{color:var(--mut)}
 .lbrowbtn{display:flex;gap:8px;margin:0 0 12px}.lbbtn{flex:1;margin:0}
 .hrow{display:flex;gap:12px;align-items:center;padding:10px 4px;border-bottom:1px solid #ffffff10}
 .hrow .hc{width:84px;flex:none}.hinfo{flex:1;min-width:0}.hinfo b{display:block}.hinfo small{color:var(--mut);font-size:11.5px;display:block;margin-top:2px}
@@ -557,6 +562,7 @@ nav.tabs button{position:relative}
   </section>
   <section class="view" id="v-friends">
     <div class="lbrowbtn"><button class="btn lbbtn" id="lbBtn" type="button">🏆 Classement</button><button class="btn lbbtn" id="hubBtn" type="button">🔄 Hub d'échange</button></div>
+    <button class="btn alt lbbtn" id="statBtn" type="button" style="width:100%;margin:-4px 0 12px">📊 Stats du jeu</button>
     <form id="addForm" class="panel" style="margin-top:0"><h3 class="disp">Ajouter un ami</h3><p>Commence à taper son pseudo, puis choisis-le dans la liste.</p>
       <div class="addrow"><input id="addInput" placeholder="Pseudo" autocapitalize="off" autocomplete="off" autocorrect="off" spellcheck="false" maxlength="16"><button class="btn" type="submit">Ajouter</button></div><div id="sugg" class="sugg"></div></form>
     <div id="friendList"></div>
@@ -1027,6 +1033,28 @@ async function hubOffer(l){
     onDone:async sel=>{try{await rpc("listing_offer",{p_id:l.id,p_give:Object.entries(sel).map(([id,qty])=>({id,qty}))});toast("Offre envoyée à "+l.pseudo);SOCIAL.names[l.user_id]=l.pseudo;loadSocial();showHub("all")}catch(e){showHub("all")}}});
 }
 $("#hubBtn").onclick=()=>showHub("all");
+/* ---------- STATS GLOBALES ---------- */
+const fmtN=n=>Number(n||0).toLocaleString("fr-FR");
+async function showStats(){
+  ov.innerHTML=`<div class="fview"><div class="phead"><div style="flex:1"><h2>📊 Stats du jeu</h2><small>Tous les joueurs, depuis le lancement</small></div><button class="btn alt sm" id="close">✕</button></div><div id="stBody"><p class="note">Chargement…</p></div></div>`;
+  ov.classList.add("on");ov.scrollTop=0;$("#close").onclick=closeOv;
+  let d;try{d=await rpc("global_stats")}catch(e){$("#stBody").innerHTML=`<p class="note">Stats indisponibles.</p>`;return}
+  if(!d){$("#stBody").innerHTML=`<p class="note">Stats indisponibles.</p>`;return}
+  const nm=id=>BY_ID[id]?`${esc(cName(BY_ID[id],!S.col[id]))} <small>${esc(SET_BY[BY_ID[id].set].short||SET_BY[BY_ID[id].set].name)}</small>`:"—";
+  const kpi=(v,l)=>`<div class="stk"><b>${v}</b><span>${l}</span></div>`;
+  const BR=Object.fromEntries((d.by_rarity||[]).map(x=>[x.rar,x]));
+  const lim=Object.fromEntries((d.limited||[]).map(x=>[x.id,x]));
+  let h=`<div class="stgrid">${kpi(fmtN(d.packs),"paquets ouverts")}${kpi(fmtN(d.cards),"cartes tirées")}${kpi(fmtN(d.players),"joueurs")}${kpi(fmtN(d.trades),"échanges")}${kpi(fmtN(d.traded_cards),"cartes échangées")}${kpi(fmtN(d.holos),"holos ✨")}${kpi(fmtN(d.recycled),"doublons recyclés")}${kpi(fmtN(d.listings),"annonces au hub")}</div>`;
+  h+=`<div class="sect">Par rareté</div>`;
+  h+=R_ORDER.filter(r=>BR[r]).map(r=>{const x=BR[r],pct=d.cards?x.total/d.cards*100:0;
+    const lims=r==="S"||r==="U"?CARDS.filter(c=>c.rar===r).map(c=>{const l=lim[c.id]||{minted:0,max:r==="U"?1:3};return `<i>${esc(cName(c,!S.col[c.id]))} ${l.minted}/${l.max}</i>`}).join(""):"";
+    return `<div class="strow"><div class="sth"><span ${rcls(r)}><b>${RAR[r].name}</b></span><span class="stn">${fmtN(x.total)}</span><span class="stp">${pct.toFixed(2)} % <small>(prévu ${RAR[r].rate} %)</small></span></div>
+      ${lims?`<div class="hw" style="margin-top:6px">${lims}</div>`:`<div class="stl">🔝 Plus tirée : ${nm(x.top)} · <b>${fmtN(x.top_n)}</b></div><div class="stl">🔻 Moins tirée : ${nm(x.low)} · <b>${fmtN(x.low_n)}</b>${x.low_ties>1?` <small>(+${x.low_ties-1} à égalité)</small>`:""}</div>`}</div>`}).join("");
+  if((d.top_cards||[]).length)h+=`<div class="sect">Top 5 des cartes les plus tirées</div>`+d.top_cards.map((t,i)=>`<div class="stl" style="padding:6px 2px">${["🥇","🥈","🥉","4.","5."][i]} ${nm(t.id)} · <b>${fmtN(t.n)}</b></div>`).join("");
+  if(d.since)h+=`<p class="note" style="margin-top:14px">Depuis le ${new Date(d.since).toLocaleDateString("fr-FR")}.</p>`;
+  $("#stBody").innerHTML=h;
+}
+$("#statBtn").onclick=showStats;
 const buzz=ms=>{try{navigator.vibrate&&navigator.vibrate(ms)}catch(e){}};
 function attachTilt(host){
   const t=host&&host.querySelector(".tilt");if(!t)return;
